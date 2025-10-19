@@ -14,7 +14,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { toast } = useToast()
   const supabase = getSupabaseBrowserClient()
 
@@ -75,6 +75,8 @@ export default function SettingsPage() {
       })
 
       if (error) throw error
+
+      await refreshUser()
 
       toast({
         title: "Perfil atualizado!",

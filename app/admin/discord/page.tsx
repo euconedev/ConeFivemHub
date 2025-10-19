@@ -7,61 +7,57 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Search, Plus, X, Users } from "lucide-react"
-
-interface DiscordClient {
-  id: string
-  userId: string
-  discordId: string
-  discordUsername: string
-  tags: string[]
-  joinedAt: string
-}
+import { getDiscordClients, updateDiscordClientTags, type DiscordClient } from "@/lib/supabase-storage"
 
 const GUILD_ID = "928115847967408168"
-const STORAGE_KEY = "conefivem_discord_clients"
 
 export default function AdminDiscordPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [clients, setClients] = useState<DiscordClient[]>([])
   const [newTag, setNewTag] = useState("")
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      setClients(JSON.parse(stored))
-    }
+    loadClients()
   }, [])
 
-  useEffect(() => {
-    if (clients.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients))
-    }
-  }, [clients])
+  const loadClients = async () => {
+    setLoading(true)
+    const data = await getDiscordClients()
+    setClients(data)
+    setLoading(false)
+  }
 
   const filteredClients = clients.filter(
     (client) =>
-      client.discordUsername.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.discord_username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
-  const addTagToClient = (clientId: string) => {
+  const addTagToClient = async (clientId: string) => {
     if (newTag.trim()) {
-      setClients(
-        clients.map((client) =>
-          client.id === clientId ? { ...client, tags: [...client.tags, newTag.trim()] } : client,
-        ),
-      )
-      setNewTag("")
+      const client = clients.find((c) => c.id === clientId)
+      if (client) {
+        const updatedTags = [...client.tags, newTag.trim()]
+        const success = await updateDiscordClientTags(clientId, updatedTags)
+        if (success) {
+          setClients(clients.map((c) => (c.id === clientId ? { ...c, tags: updatedTags } : c)))
+          setNewTag("")
+        }
+      }
     }
   }
 
-  const removeTagFromClient = (clientId: string, tagIndex: number) => {
-    setClients(
-      clients.map((client) =>
-        client.id === clientId ? { ...client, tags: client.tags.filter((_, i) => i !== tagIndex) } : client,
-      ),
-    )
+  const removeTagFromClient = async (clientId: string, tagIndex: number) => {
+    const client = clients.find((c) => c.id === clientId)
+    if (client) {
+      const updatedTags = client.tags.filter((_, i) => i !== tagIndex)
+      const success = await updateDiscordClientTags(clientId, updatedTags)
+      if (success) {
+        setClients(clients.map((c) => (c.id === clientId ? { ...c, tags: updatedTags } : c)))
+      }
+    }
   }
 
   return (
@@ -121,7 +117,9 @@ export default function AdminDiscordPage() {
           <CardTitle>Clientes Discord ({filteredClients.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredClients.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+          ) : filteredClients.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhum cliente conectado ao Discord ainda</p>
@@ -133,10 +131,10 @@ export default function AdminDiscordPage() {
                 <div key={client.id} className="p-4 rounded-lg border border-border/50 bg-background/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold">{client.discordUsername}</h4>
-                      <p className="text-sm text-muted-foreground">Discord ID: {client.discordId}</p>
+                      <h4 className="font-semibold">{client.discord_username}</h4>
+                      <p className="text-sm text-muted-foreground">Discord ID: {client.discord_id}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Conectado em: {new Date(client.joinedAt).toLocaleDateString("pt-BR")}
+                        Conectado em: {new Date(client.joined_at).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                   </div>

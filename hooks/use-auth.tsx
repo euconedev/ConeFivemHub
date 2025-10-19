@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
+  refreshUser: () => Promise<void>
   isAdmin: boolean
 }
 
@@ -23,6 +24,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = getSupabaseBrowserClient()
+
+  const refreshUser = async () => {
+    const {
+      data: { user: refreshedUser },
+    } = await supabase.auth.getUser()
+    setUser(refreshedUser)
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -128,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.email === ADMIN_EMAIL || user?.user_metadata?.role === "admin"
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, login, signup, resetPassword, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, signOut, login, signup, resetPassword, refreshUser, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

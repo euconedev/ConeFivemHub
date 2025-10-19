@@ -18,6 +18,43 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 
 -- ============================
+-- 1. PROFILES (extends auth.users)
+-- ============================
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  email TEXT,
+  discord_id TEXT UNIQUE,
+  role TEXT CHECK (role IN ('admin','user')) DEFAULT 'user',
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create trigger to auto-create profile when user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, name, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'user')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Index for performance
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_discord_id ON public.profiles(discord_id);
+
+-- ============================
 -- 2. PRODUCTS
 -- ============================
 CREATE TABLE IF NOT EXISTS public.products (

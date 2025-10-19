@@ -1,191 +1,203 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Search, Plus, X, Users } from "lucide-react"
-import { getDiscordClients, updateDiscordClientTags, type DiscordClient } from "@/lib/supabase-storage"
+import { Package, Users, Key, DollarSign, TrendingUp, ShoppingCart } from "lucide-react"
+import { getProducts, getLicenses, type StorageProduct, type StorageLicense } from "@/lib/storage"
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
-const GUILD_ID = "928115847967408168"
-
-export default function AdminDiscordPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [clients, setClients] = useState<DiscordClient[]>([])
-  const [newTag, setNewTag] = useState("")
-  const [selectedClient, setSelectedClient] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function AdminDashboardPage() {
+  const [products, setProducts] = useState<StorageProduct[]>([])
+  const [licenses, setLicenses] = useState<StorageLicense[]>([])
+  const [activeUsers, setActiveUsers] = useState<number>(0)
+  const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
-    loadClients()
-  }, [])
+    setProducts(getProducts())
+    setLicenses(getLicenses())
 
-  const loadClients = async () => {
-    setLoading(true)
-    const data = await getDiscordClients()
-    setClients(data)
-    setLoading(false)
-  }
+    const fetchActiveUsers = async () => {
+      try {
+        const { count, error } = await supabase.from("profiles").select("*", { count: "exact", head: true })
 
-  const filteredClients = clients.filter(
-    (client) =>
-      client.discord_username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
-  )
-
-  const addTagToClient = async (clientId: string) => {
-    if (newTag.trim()) {
-      const client = clients.find((c) => c.id === clientId)
-      if (client) {
-        const updatedTags = [...client.tags, newTag.trim()]
-        const success = await updateDiscordClientTags(clientId, updatedTags)
-        if (success) {
-          setClients(clients.map((c) => (c.id === clientId ? { ...c, tags: updatedTags } : c)))
-          setNewTag("")
+        if (!error && count !== null) {
+          setActiveUsers(count)
+        } else {
+          console.log("[v0] Profiles table not found or error:", error?.message)
+          setActiveUsers(0)
         }
+      } catch (err) {
+        console.log("[v0] Error fetching active users:", err)
+        setActiveUsers(0)
       }
     }
-  }
 
-  const removeTagFromClient = async (clientId: string, tagIndex: number) => {
-    const client = clients.find((c) => c.id === clientId)
-    if (client) {
-      const updatedTags = client.tags.filter((_, i) => i !== tagIndex)
-      const success = await updateDiscordClientTags(clientId, updatedTags)
-      if (success) {
-        setClients(clients.map((c) => (c.id === clientId ? { ...c, tags: updatedTags } : c)))
-      }
+    fetchActiveUsers()
+  }, [supabase])
+
+  const totalRevenue = licenses.reduce((sum, license) => {
+    const product = products.find((p) => p.id === license.productId)
+    return sum + (product?.price || 0)
+  }, 0)
+
+  const stats = [
+    {
+      title: "Receita Total",
+      value: `R$ ${totalRevenue.toFixed(2)}`,
+      icon: DollarSign,
+      description: "+12.5% em relação ao mês passado",
+      trend: "up",
+    },
+    {
+      title: "Total de Produtos",
+      value: products.length,
+      icon: Package,
+      description: "Produtos ativos na loja",
+      trend: "neutral",
+    },
+    {
+      title: "Usuários Ativos",
+      value: activeUsers,
+      icon: Users,
+      description: "Usuários registrados no sistema",
+      trend: "up",
+    },
+    {
+      title: "Licenças Vendidas",
+      value: licenses.length,
+      icon: Key,
+      description: "Total de licenças ativas",
+      trend: "neutral",
+    },
+  ]
+
+  const recentSales = licenses.slice(0, 5).map((license) => {
+    const product = products.find((p) => p.id === license.productId)
+    return {
+      ...license,
+      product,
     }
-  }
+  })
+
+  const topProducts = [...products].sort((a, b) => b.downloads - a.downloads).slice(0, 5)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Integração Discord</h1>
-          <p className="text-muted-foreground">Gerencie tags de clientes conectados ao Discord</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
-          <span>Guild ID: {GUILD_ID}</span>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Dashboard Administrativo</h1>
+        <p className="text-muted-foreground">Visão geral do seu negócio</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-primary">{clients.length}</div>
-            <p className="text-sm text-muted-foreground">Clientes Conectados</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-primary">
-              {clients.filter((c) => c.tags.includes("premium")).length}
-            </div>
-            <p className="text-sm text-muted-foreground">Clientes Premium</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-primary">
-              {clients.filter((c) => c.tags.includes("vip")).length}
-            </div>
-            <p className="text-sm text-muted-foreground">Clientes VIP</p>
-          </CardContent>
-        </Card>
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon
+          return (
+            <Card key={stat.title} className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  {stat.trend === "up" && <TrendingUp className="h-3 w-3 text-primary" />}
+                  {stat.description}
+                </p>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Buscar clientes..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      {/* Clients List */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle>Clientes Discord ({filteredClients.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-          ) : filteredClients.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum cliente conectado ao Discord ainda</p>
-              <p className="text-sm mt-2">Os clientes aparecerão aqui quando se conectarem ao servidor Discord</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredClients.map((client) => (
-                <div key={client.id} className="p-4 rounded-lg border border-border/50 bg-background/50 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">{client.discord_username}</h4>
-                      <p className="text-sm text-muted-foreground">Discord ID: {client.discord_id}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Conectado em: {new Date(client.joined_at).toLocaleDateString("pt-BR")}
-                      </p>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Sales */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Vendas Recentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentSales.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma venda registrada ainda</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentSales.map((sale) => (
+                  <div key={sale.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                    <div className="flex items-center gap-3">
+                      {sale.product && (
+                        <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
+                          <img
+                            src={sale.product.image || "/placeholder.svg"}
+                            alt={sale.product.name}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-sm">{sale.productName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(sale.purchaseDate).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">R$ {sale.product?.price.toFixed(2)}</p>
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-                  {/* Tags */}
-                  <div className="space-y-2">
-                    <Label className="text-xs">Tags</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {client.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="gap-1">
-                          {tag}
-                          <button
-                            onClick={() => removeTagFromClient(client.id, index)}
-                            className="hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
+        {/* Top Products */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Produtos Mais Vendidos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhum produto cadastrado ainda</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topProducts.map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                      </div>
+                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
+                        <img
+                          src={product.image || "/placeholder.svg"}
+                          alt={product.name}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.downloads} downloads</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">R$ {product.price.toFixed(2)}</p>
                     </div>
                   </div>
-
-                  {/* Add Tag */}
-                  {selectedClient === client.id ? (
-                    <div className="flex gap-2">
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && addTagToClient(client.id)}
-                        placeholder="Nova tag..."
-                        className="h-8 text-sm"
-                      />
-                      <Button onClick={() => addTagToClient(client.id)} size="sm">
-                        Adicionar
-                      </Button>
-                      <Button onClick={() => setSelectedClient(null)} variant="outline" size="sm">
-                        Cancelar
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button onClick={() => setSelectedClient(client.id)} variant="outline" size="sm" className="gap-2">
-                      <Plus className="h-3 w-3" />
-                      Adicionar Tag
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

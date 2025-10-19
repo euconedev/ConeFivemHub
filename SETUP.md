@@ -27,10 +27,21 @@ Este documento contém todas as instruções necessárias para configurar o Supa
 
 ### Passo 2: Executar Scripts SQL
 
-Execute os scripts na ordem abaixo em **SQL Editor** no Supabase:
+⚠️ **IMPORTANTE**: Execute os scripts **NA ORDEM EXATA** abaixo. Não pule nenhum script!
+
+Execute os scripts em **SQL Editor** no Supabase:
 
 #### 1. Criar Tabelas (`scripts/01-create-tables.sql`)
-Cria todas as tabelas necessárias: users, products, licenses, payments, discord_clients
+**OBRIGATÓRIO - Execute primeiro!**
+
+Cria todas as tabelas necessárias:
+- `profiles` - Perfis de usuários (estende auth.users)
+- `products` - Produtos da loja
+- `licenses` - Licenças vendidas
+- `payments` - Histórico de pagamentos
+- `discord_clients` - Clientes do Discord
+
+⚠️ **Sem este script, o sistema não funcionará!** Você verá erros 404 nas tabelas.
 
 #### 2. Criar Storage Bucket (`scripts/02-create-storage.sql`)
 Cria o bucket de armazenamento para avatares de usuários com políticas de acesso

@@ -4,15 +4,28 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Users, Key, DollarSign, TrendingUp, ShoppingCart } from "lucide-react"
 import { getProducts, getLicenses, type StorageProduct, type StorageLicense } from "@/lib/storage"
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<StorageProduct[]>([])
   const [licenses, setLicenses] = useState<StorageLicense[]>([])
+  const [activeUsers, setActiveUsers] = useState<number>(0)
+  const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
     setProducts(getProducts())
     setLicenses(getLicenses())
-  }, [])
+
+    const fetchActiveUsers = async () => {
+      const { count, error } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+
+      if (!error && count !== null) {
+        setActiveUsers(count)
+      }
+    }
+
+    fetchActiveUsers()
+  }, [supabase])
 
   const totalRevenue = licenses.reduce((sum, license) => {
     const product = products.find((p) => p.id === license.productId)
@@ -36,9 +49,9 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Usuários Ativos",
-      value: "24",
+      value: activeUsers,
       icon: Users,
-      description: "+3 novos esta semana",
+      description: "Usuários registrados no sistema",
       trend: "up",
     },
     {

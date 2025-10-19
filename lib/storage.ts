@@ -252,3 +252,11 @@ export function deactivateSharedLink(id: string): boolean {
 export function getUserSharedLinks(userId: string): SharedLink[] {
   return getSharedLinks().filter((l) => l.createdBy === userId)
 }
+
+export function deleteSharedLink(id: string): boolean {
+  const links = getSharedLinks()
+  const filtered = links.filter((l) => l.id !== id)
+  if (filtered.length === links.length) return false
+  saveSharedLinks(filtered)
+  return true
+}

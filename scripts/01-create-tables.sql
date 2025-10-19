@@ -3,19 +3,7 @@
 -- Desenvolvido por Cone Dev
 -- ===================================================
 
--- ============================
--- 1. USERS
--- ============================
-CREATE TABLE IF NOT EXISTS public.users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT,
-  discord_id TEXT UNIQUE,
-  role TEXT CHECK (role IN ('admin','user')) DEFAULT 'user',
-  avatar TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Removendo tabela users duplicada, usando apenas profiles
 
 -- ============================
 -- 1. PROFILES (extends auth.users)
@@ -66,8 +54,8 @@ CREATE TABLE IF NOT EXISTS public.products (
   category TEXT CHECK (category IN ('script','asset','mlo','vehicle','weapon')),
   version TEXT,
   status TEXT CHECK (status IN ('ativo','inativo')) DEFAULT 'ativo',
-  features TEXT[], -- Array de recursos do produto
-  tags TEXT[], -- Array de tags
+  features TEXT[],
+  tags TEXT[],
   downloads INTEGER DEFAULT 0,
   rating NUMERIC(3,2) DEFAULT 0,
   is_new BOOLEAN DEFAULT TRUE,
@@ -79,10 +67,11 @@ CREATE TABLE IF NOT EXISTS public.products (
 -- ============================
 -- 3. LICENSES
 -- ============================
+-- Atualizando foreign key para referenciar auth.users
 CREATE TABLE IF NOT EXISTS public.licenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   serial_key TEXT UNIQUE NOT NULL,
   ip_address TEXT,
   status TEXT CHECK (status IN ('active','expired','suspended')) DEFAULT 'active',
@@ -90,7 +79,6 @@ CREATE TABLE IF NOT EXISTS public.licenses (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_license_user_id ON public.licenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_license_product_id ON public.licenses(product_id);
 CREATE INDEX IF NOT EXISTS idx_license_serial_key ON public.licenses(serial_key);
@@ -98,9 +86,10 @@ CREATE INDEX IF NOT EXISTS idx_license_serial_key ON public.licenses(serial_key)
 -- ============================
 -- 4. PAYMENTS
 -- ============================
+-- Atualizando foreign key para referenciar auth.users
 CREATE TABLE IF NOT EXISTS public.payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
   amount NUMERIC(10,2) NOT NULL,
   method TEXT DEFAULT 'pix',
@@ -117,14 +106,32 @@ CREATE INDEX IF NOT EXISTS idx_payment_transaction_id ON public.payments(transac
 -- ============================
 -- 5. DISCORD CLIENTS
 -- ============================
+-- Atualizando foreign key para referenciar auth.users
 CREATE TABLE IF NOT EXISTS public.discord_clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   discord_id TEXT UNIQUE NOT NULL,
   discord_username TEXT NOT NULL,
-  tags TEXT[], -- Array de tags para o cliente
+  tags TEXT[],
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_discord_user_id ON public.discord_clients(user_id);
 CREATE INDEX IF NOT EXISTS idx_discord_discord_id ON public.discord_clients(discord_id);
+
+-- ============================
+-- 6. SHARED LINKS
+-- ============================
+CREATE TABLE IF NOT EXISTS public.shared_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  license_id UUID REFERENCES public.licenses(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_shared_links_token ON public.shared_links(token);
+CREATE INDEX IF NOT EXISTS idx_shared_links_user_id ON public.shared_links(user_id);
+CREATE INDEX IF NOT EXISTS idx_shared_links_license_id ON public.shared_links(license_id);

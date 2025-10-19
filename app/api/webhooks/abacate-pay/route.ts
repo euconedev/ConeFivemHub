@@ -1,14 +1,38 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { sendPurchaseNotification } from "@/lib/discord-webhook"
+import { secureCompare } from "@/lib/security/encryption"
+import { logAudit, getClientIP, getUserAgent } from "@/lib/security/audit-log"
+import { checkRateLimit, RATE_LIMITS } from "@/lib/security/rate-limit"
 
 export async function POST(request: NextRequest) {
+  const ipAddress = getClientIP(request)
+  const userAgent = getUserAgent(request)
+
   try {
-    // Verificar secret do webhook
+    const rateLimit = checkRateLimit(`webhook:${ipAddress}`, RATE_LIMITS.API_STRICT)
+    if (!rateLimit.allowed) {
+      await logAudit({
+        action: "security.rate_limit_exceeded",
+        ipAddress,
+        userAgent,
+        metadata: { endpoint: "/api/webhooks/abacate-pay" },
+        severity: "warning",
+      })
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+    }
+
     const webhookSecret = process.env.ABACATE_PAY_WEBHOOK_SECRET
     const receivedSecret = request.headers.get("x-webhook-secret")
 
-    if (!webhookSecret || receivedSecret !== webhookSecret) {
+    if (!webhookSecret || !receivedSecret || !secureCompare(webhookSecret, receivedSecret)) {
+      await logAudit({
+        action: "security.invalid_token",
+        ipAddress,
+        userAgent,
+        metadata: { endpoint: "/api/webhooks/abacate-pay" },
+        severity: "critical",
+      })
       console.error("[Webhook] Invalid secret")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -30,7 +54,7 @@ export async function POST(request: NextRequest) {
         .from("purchases")
         .select(`
           *,
-          users (
+          profiles!inner (
             email,
             full_name
           ),
@@ -73,29 +97,64 @@ export async function POST(request: NextRequest) {
           status: "active",
         })
 
+        await logAudit({
+          action: "license.created",
+          userId: purchase.user_id,
+          ipAddress,
+          userAgent,
+          metadata: {
+            purchaseId: purchase.id,
+            productId: purchase.product_id,
+            licenseKey,
+          },
+          severity: "info",
+        })
+
         console.log("[Webhook] License created for purchase:", purchase.id)
       }
+
+      await logAudit({
+        action: "payment.completed",
+        userId: purchase.user_id,
+        ipAddress,
+        userAgent,
+        metadata: {
+          purchaseId: purchase.id,
+          productId: purchase.product_id,
+          amount: purchase.amount,
+          pixId,
+        },
+        severity: "info",
+      })
 
       try {
         await sendPurchaseNotification({
           id: purchase.id,
           productName: purchase.products?.name || "Produto",
           price: purchase.amount,
-          userName: purchase.users?.full_name || "Cliente",
-          userEmail: purchase.users?.email || "N/A",
+          userName: purchase.profiles?.full_name || "Cliente",
+          userEmail: purchase.profiles?.email || "N/A",
           ipAddress: purchase.ip_address || "N/A",
           purchaseDate: purchase.created_at,
         })
         console.log("[Webhook] Discord notification sent successfully")
       } catch (discordError) {
         console.error("[Webhook] Failed to send Discord notification:", discordError)
-        // Não falhar o webhook se o Discord falhar
       }
     }
 
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error("[Webhook] Error processing webhook:", error)
+
+    await logAudit({
+      action: "payment.failed",
+      ipAddress,
+      userAgent,
+      metadata: { error: error instanceof Error ? error.message : "Unknown error" },
+      severity: "critical",
+    })
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

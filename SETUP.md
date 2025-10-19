@@ -27,7 +27,7 @@ Este documento contém todas as instruções necessárias para configurar o Supa
 
 ### Passo 2: Executar Scripts SQL
 
-⚠️ **IMPORTANTE**: Execute os scripts **NA ORDEM EXATA** abaixo. Não pule nenhum script!
+⚠️ **CRÍTICO**: Execute os scripts **NA ORDEM EXATA** abaixo. Não pule nenhum script!
 
 Execute os scripts em **SQL Editor** no Supabase:
 
@@ -40,8 +40,11 @@ Cria todas as tabelas necessárias:
 - `licenses` - Licenças vendidas
 - `payments` - Histórico de pagamentos
 - `discord_clients` - Clientes do Discord
+- `shared_links` - Links compartilhados de licenças
 
-⚠️ **Sem este script, o sistema não funcionará!** Você verá erros 404 nas tabelas.
+⚠️ **Sem este script, o sistema não funcionará!** Você verá erros 404 e 500 nas tabelas.
+
+🔧 **Correção aplicada**: Removida tabela `users` duplicada. Agora usa apenas `profiles` que estende `auth.users`.
 
 #### 2. Criar Storage Bucket (`scripts/02-create-storage.sql`)
 Cria o bucket de armazenamento para avatares de usuários com políticas de acesso
@@ -50,10 +53,23 @@ Cria o bucket de armazenamento para avatares de usuários com políticas de aces
 Cria funções auxiliares para geração de chaves e tokens
 
 #### 4. Configurar RLS (`scripts/04-setup-rls.sql`)
-Configura Row Level Security para proteger os dados
+**CRÍTICO - Corrige recursão infinita!**
+
+Configura Row Level Security para proteger os dados.
+
+🔧 **Correção aplicada**: 
+- Políticas RLS reescritas para evitar recursão infinita
+- Agora usa `(SELECT role FROM public.profiles WHERE id = auth.uid())` em vez de subquery recursiva
+- Adicionadas políticas para `shared_links`
+- Adicionadas políticas para permitir webhooks criarem licenças e atualizarem pagamentos
+
+⚠️ **Se você já executou este script antes**, execute novamente para aplicar as correções!
 
 #### 5. Criar Admin (`scripts/05-seed-admin.sql`)
 **IMPORTANTE**: Edite este arquivo e substitua `eucone.dev@gmail.com` pelo seu email antes de executar
+
+#### 6. Tabelas de Segurança (`scripts/06-security-tables.sql`)
+**OPCIONAL**: Cria tabelas para logs de auditoria e rate limiting
 
 ### Passo 3: Obter Credenciais
 

@@ -24,6 +24,15 @@ export default function AdminSettingsPage() {
   const [webhookUrl, setWebhookUrl] = useState("")
   const [isSavingPayment, setIsSavingPayment] = useState(false)
 
+  // Discord Settings states
+  const [discordClientId, setDiscordClientId] = useState("")
+  const [discordClientSecret, setDiscordClientSecret] = useState("")
+  const [discordRedirectUri, setDiscordRedirectUri] = useState("")
+  const [discordBotToken, setDiscordBotToken] = useState("")
+  const [discordGuildId, setDiscordGuildId] = useState("")
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState("")
+  const [isSavingDiscord, setIsSavingDiscord] = useState(false)
+
   // Email Settings states
   const [smtpHost, setSmtpHost] = useState("")
   const [smtpPort, setSmtpPort] = useState("")
@@ -80,6 +89,27 @@ export default function AdminSettingsPage() {
       })
     } finally {
       setIsSavingPayment(false)
+    }
+  }
+
+  const handleSaveDiscordSettings = async () => {
+    setIsSavingDiscord(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      console.log("Saving Discord Settings:", { discordClientId, discordClientSecret, discordRedirectUri, discordBotToken, discordGuildId, discordWebhookUrl })
+      toast({
+        title: "Sucesso!",
+        description: "Configurações do Discord salvas com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error saving Discord settings:", error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações do Discord.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingDiscord(false)
     }
   }
 
@@ -270,31 +300,90 @@ export default function AdminSettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Discord Settings */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <img src="/discord-icon.svg" alt="Discord" className="h-5 w-5" />
+            Configurações do Discord
+          </CardTitle>
+          <CardDescription>Integração com o Discord para notificações e autenticação</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="discord-client-id">Client ID</Label>
+            <Input
+              id="discord-client-id"
+              placeholder="Seu Client ID do Discord"
+              value={discordClientId}
+              onChange={(e) => setDiscordClientId(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="discord-client-secret">Client Secret</Label>
+            <Input
+              id="discord-client-secret"
+              type="password"
+              placeholder="Seu Client Secret do Discord"
+              value={discordClientSecret}
+              onChange={(e) => setDiscordClientSecret(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="discord-redirect-uri">Redirect URI</Label>
+            <Input
+              id="discord-redirect-uri"
+              placeholder="Sua Redirect URI do Discord"
+              value={discordRedirectUri}
+              onChange={(e) => setDiscordRedirectUri(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="discord-bot-token">Bot Token</Label>
+            <Input
+              id="discord-bot-token"
+              type="password"
+              placeholder="Seu Bot Token do Discord"
+              value={discordBotToken}
+              onChange={(e) => setDiscordBotToken(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="discord-guild-id">Guild ID (ID do Servidor)</Label>
+            <Input
+              id="discord-guild-id"
+              placeholder="ID do seu servidor Discord"
+              value={discordGuildId}
+              onChange={(e) => setDiscordGuildId(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="discord-webhook-url">Webhook URL</Label>
+            <Input
+              id="discord-webhook-url"
+              placeholder="URL do Webhook para notificações"
+              value={discordWebhookUrl}
+              onChange={(e) => setDiscordWebhookUrl(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleSaveDiscordSettings} disabled={isSavingDiscord}>
+            {isSavingDiscord ? "Salvando..." : "Salvar Configurações"}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Security Settings */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Segurança
+            Configurações de Segurança
           </CardTitle>
-          <CardDescription>Configurações de segurança da plataforma</CardDescription>
+          <CardDescription>Gerencie as opções de segurança da sua conta</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="discord-client-id">Discord Client ID</Label>
-            <Input id="discord-client-id" placeholder="Seu Discord Client ID" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="discord-client-secret">Discord Client Secret</Label>
-            <Input id="discord-client-secret" type="password" placeholder="••••••••••••••••" />
-          </div>
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="two-factor-auth">Autenticação de Dois Fatores</Label>
-              <p className="text-sm text-muted-foreground">
-                Exija um código de verificação adicional para fazer login.
-              </p>
-            </div>
+            <Label htmlFor="two-factor-auth">Autenticação de Dois Fatores</Label>
             <Switch
               id="two-factor-auth"
               checked={twoFactorAuth}
@@ -307,9 +396,7 @@ export default function AdminSettingsPage() {
               id="session-timeout"
               type="number"
               value={sessionTimeout}
-              onChange={(e) => setSessionTimeout(Number(e.target.value))}
-              min={5}
-              max={120}
+              onChange={(e) => setSessionTimeout(parseInt(e.target.value))}
             />
           </div>
           <Button onClick={handleSaveSecuritySettings} disabled={isSavingSecurity}>

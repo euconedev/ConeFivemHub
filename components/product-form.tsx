@@ -24,7 +24,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: product?.description || "",
-    price: product?.price ? product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "R$ 0,00",
+    price: product?.price ? `R$ ${product.price.toFixed(2).replace('.', ',')}` : "R$ 0,00",
     category: product?.category || "script",
     image: product?.image || "",
     version: product?.version || "1.0.0",
@@ -38,40 +38,72 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/[^0-9,]/g, '').replace(',', '.');
-    if (!numericValue) return "";
-    const number = parseFloat(numericValue);
-    return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+    // Remove tudo que não é número, mantendo apenas dígitos
+    const onlyDigits = value.replace(/\D/g, '')
+    
+    // Se não há dígitos, retorna R$ 0,00
+    if (!onlyDigits) return "R$ 0,00"
+    
+    // Converte para número e divide por 100 para obter os centavos
+    const number = parseInt(onlyDigits, 10) / 100
+    
+    // Formata para o padrão brasileiro
+    return `R$ ${number.toFixed(2).replace('.', ',')}`
+  }
 
   const parseCurrency = (value: string) => {
-    const numericValue = value.replace(/[^0-9,]/g, '').replace(',', '.');
-    return parseFloat(numericValue);
-  };
+    // Remove "R$" e espaços, depois substitui vírgula por ponto
+    const numericValue = value.replace('R$', '').trim().replace(',', '.')
+    return parseFloat(numericValue) || 0
+  }
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedValue = formatCurrency(e.target.value);
-    setFormData({ ...formData, price: formattedValue });
-  };
+    const formattedValue = formatCurrency(e.target.value)
+    setFormData({ ...formData, price: formattedValue })
+  }
+
+  const handlePriceFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Quando o campo recebe foco, remove o "R$" para facilitar a digitação
+    if (formData.price === "R$ 0,00") {
+      setFormData({ ...formData, price: "" })
+    }
+  }
+
+  const handlePriceBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Quando o campo perde foco, formata o valor
+    if (!formData.price || formData.price === "R$ 0,00") {
+      setFormData({ ...formData, price: "R$ 0,00" })
+    } else {
+      const formattedValue = formatCurrency(formData.price)
+      setFormData({ ...formData, price: formattedValue })
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
   
     try {
-      const priceToSend = parseCurrency(formData.price as string);
-      // Send product data to the API endpoint
-      const response = await fetch("/api/products", {
-        method: "POST",
+      const priceToSend = parseCurrency(formData.price)
+      const method = product ? "PUT" : "POST"
+      const url = product ? `/api/products/${product.id}` : "/api/products"
+  
+      const response = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, price: priceToSend, imageUrl: formData.image }),
-      });
+        body: JSON.stringify({
+          ...formData,
+          id: product?.id, // Include ID for update operations
+          price: priceToSend,
+          imageUrl: formData.image,
+        }),
+      })
   
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
   
-      // Send Discord notification for new products
+      // Send Discord notification only for new products
       if (!product) {
         await sendProductPostNotification({
           name: formData.name,
@@ -162,6 +194,9 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
                 type="text"
                 value={formData.price}
                 onChange={handlePriceChange}
+                onFocus={handlePriceFocus}
+                onBlur={handlePriceBlur}
+                placeholder="R$ 0,00"
                 required
               />
             </div>

@@ -2,13 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
-
-  if (!id) {
-    return new NextResponse(JSON.stringify({ error: "Product ID is required for update." }), { status: 400 });
-  }
-
+export async function POST(request: Request) {
   const {
     name,
     description,
@@ -22,7 +16,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     isNew,
     isFeatured,
   } = await request.json();
-
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,34 +40,32 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
   );
 
-  const image_url = imageUrl ?? image ?? null;
+  // Prefer imageUrl if provided, otherwise fallback to image
+  const image_url = imageUrl ?? image ?? null
 
   const { data, error } = await supabase
     .from('products')
-    .update({
-      name,
-      description,
-      price,
-      category,
-      image_url,
-      version,
-      features,
-      tags,
-      is_new: isNew,
-      is_featured: isFeatured,
-    })
-    .eq('id', id)
+    .insert([
+      {
+        name,
+        description,
+        price,
+        category,
+        image_url,
+        version,
+        features,
+        tags,
+        is_new: isNew,
+        is_featured: isFeatured,
+      },
+    ])
     .select();
 
   if (error) {
     return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
   }
 
-  if (!data || data.length === 0) {
-    return new NextResponse(JSON.stringify({ error: "Product not found or no changes made." }), { status: 404 });
-  }
-
-  return new NextResponse(JSON.stringify(data[0]), { status: 200 });
+  return new NextResponse(JSON.stringify(data), { status: 201 });
 }
 
 export async function GET() {

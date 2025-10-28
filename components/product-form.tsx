@@ -24,7 +24,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: product?.description || "",
-    price: product?.price || 0,
+    price: product?.price ? product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "R$ 0,00",
     category: product?.category || "script",
     image: product?.image || "",
     version: product?.version || "1.0.0",
@@ -34,42 +34,34 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
     isFeatured: product?.isFeatured || false,
   })
 
-  const [newFeature, setNewFeature] = useState("")
-  const [newTag, setNewTag] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const formatCurrency = (value: string) => {
+    const numericValue = value.replace(/[^0-9,]/g, '').replace(',', '.');
+    if (!numericValue) return "";
+    const number = parseFloat(numericValue);
+    return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
 
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setFormData({ ...formData, features: [...formData.features, newFeature.trim()] })
-      setNewFeature("")
-    }
-  }
+  const parseCurrency = (value: string) => {
+    const numericValue = value.replace(/[^0-9,]/g, '').replace(',', '.');
+    return parseFloat(numericValue);
+  };
 
-  const removeFeature = (index: number) => {
-    setFormData({ ...formData, features: formData.features.filter((_, i) => i !== index) })
-  }
-
-  const addTag = () => {
-    if (newTag.trim()) {
-      setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] })
-      setNewTag("")
-    }
-  }
-
-  const removeTag = (index: number) => {
-    setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== index) })
-  }
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatCurrency(e.target.value);
+    setFormData({ ...formData, price: formattedValue });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
   
     try {
+      const priceToSend = parseCurrency(formData.price as string);
       // Send product data to the API endpoint
       const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, imageUrl: formData.image }),
+        body: JSON.stringify({ ...formData, price: priceToSend, imageUrl: formData.image }),
       });
   
       if (!response.ok) {
@@ -140,11 +132,9 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
               <Label htmlFor="price">Preço (R$)</Label>
               <Input
                 id="price"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: Number.parseFloat(e.target.value) })}
+                onChange={handlePriceChange}
                 required
               />
             </div>

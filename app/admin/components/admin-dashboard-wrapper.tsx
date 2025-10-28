@@ -1,7 +1,7 @@
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import AdminDashboardPage from "../page";
+import AdminDashboardClient from "./components/admin-dashboard-client";
 
-export default async function AdminDashboardWrapper() {
+export default async function AdminDashboardPage() {
   const supabase = await getSupabaseServerClient();
   let activeUsers = 0;
 
@@ -17,5 +17,5 @@ export default async function AdminDashboardWrapper() {
     console.error("[v0] Error fetching active users:", err);
   }
 
-  return <AdminDashboardPage initialActiveUsers={activeUsers} />;
+  return <AdminDashboardClient initialActiveUsers={activeUsers} />;
 }

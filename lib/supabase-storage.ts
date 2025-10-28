@@ -235,6 +235,8 @@ export async function deactivateSharedLink(id: string): Promise<boolean> {
   return true
 }
 
+export { getProductById as getSupabaseProductById };
+
 // Discord Clients
 export async function getDiscordClients(): Promise<DiscordClient[]> {
   const supabase = getSupabaseBrowserClient()

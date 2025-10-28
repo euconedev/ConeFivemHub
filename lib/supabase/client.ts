@@ -11,7 +11,7 @@ export function getSupabaseBrowserClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return createBrowserClient("https://placeholder.supabase.co", "placeholder-key")
+    throw new Error("Supabase environment variables are not set!")
   }
 
   if (client) return client

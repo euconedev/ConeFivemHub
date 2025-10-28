@@ -18,6 +18,7 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = params;
+  console.log("Product ID from params:", id); // Novo log para depuração do ID
   const product = await getSupabaseProductById(id);
 
   console.log("Fetched Product:", product); // Novo log para depuração

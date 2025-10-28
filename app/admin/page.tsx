@@ -5,34 +5,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Users, Key, DollarSign, TrendingUp, ShoppingCart } from "lucide-react"
 import { getProducts, getLicenses, type StorageProduct, type StorageLicense } from "@/lib/storage"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+import { getSupabaseServerClient } from "@/lib/supabase/server"
 
-export default function AdminDashboardPage() {
+import AdminDashboardWrapper from "./components/admin-dashboard-wrapper";
+
+export default AdminDashboardWrapper;
+
+interface AdminDashboardPageProps {
+  initialActiveUsers: number;
+}
+
+export default function AdminDashboardPage({ initialActiveUsers }: AdminDashboardPageProps) {
   const [products, setProducts] = useState<StorageProduct[]>([])
   const [licenses, setLicenses] = useState<StorageLicense[]>([])
-  const [activeUsers, setActiveUsers] = useState<number>(0)
+  const [activeUsers, setActiveUsers] = useState<number>(initialActiveUsers)
   const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
     setProducts(getProducts())
     setLicenses(getLicenses())
 
-    const fetchActiveUsers = async () => {
-      try {
-        const { count, error } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+    // Remove a lógica de busca de activeUsers daqui, pois será feita no server-side
+    // const fetchActiveUsers = async () => {
+    //   try {
+    //     const { count, error } = await supabase.from("profiles").select("*", { count: "exact", head: true })
 
-        if (!error && count !== null) {
-          setActiveUsers(count)
-        } else {
-          console.log("[v0] Profiles table not found or error:", error?.message)
-          setActiveUsers(0)
-        }
-      } catch (err) {
-        console.log("[v0] Error fetching active users:", err)
-        setActiveUsers(0)
-      }
-    }
+    //     if (!error && count !== null) {
+    //       setActiveUsers(count)
+    //     } else {
+    //       console.log("[v0] Profiles table not found or error:", error?.message)
+    //       setActiveUsers(0)
+    //     }
+    //   } catch (err) {
+    //     console.log("[v0] Error fetching active users:", err)
+    //     setActiveUsers(0)
+    //   }
+    // }
 
-    fetchActiveUsers()
+    // fetchActiveUsers()
   }, [supabase])
 
   const totalRevenue = licenses.reduce((sum, license) => {

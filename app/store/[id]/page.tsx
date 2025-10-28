@@ -1,22 +1,45 @@
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Star, Download, ShoppingCart, Check, Shield, RefreshCw } from "lucide-react"
-import { getProducts } from "@/lib/storage"
+import { notFound } from 'next/navigation';
+import Link from "next/link";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Star, Download, ShoppingCart, Check, Shield, RefreshCw } from "lucide-react";
+import { getSupabaseProductById } from '@/lib/supabase-storage';
+import { Product } from '@/lib/types';
 
-export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const products = getProducts()
-  const product = products.find((p) => p.id === id)
+interface ProductPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = params;
+  const product = await getSupabaseProductById(id);
 
   if (!product) {
-    notFound()
+    notFound();
   }
+
+  // Map snake_case to camelCase for consistency with Product type
+  const formattedProduct: Product = {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    category: product.category,
+    image: product.image_url,
+    features: product.features,
+    version: product.version,
+    downloads: product.downloads,
+    rating: product.rating,
+    isNew: product.is_new,
+    isFeatured: product.is_featured,
+    tags: product.tags,
+  };
 
   return (
     <div className="min-h-screen flex flex-col">

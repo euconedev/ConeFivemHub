@@ -63,8 +63,19 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
+  
     try {
+      // Send product data to the API endpoint
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, imageUrl: formData.image }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
       // Send Discord notification for new products
       if (!product) {
         await sendProductPostNotification({
@@ -74,7 +85,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
           tags: formData.tags,
         })
       }
-
+  
       onSave(formData)
     } catch (error) {
       console.error("[v0] Error saving product:", error)

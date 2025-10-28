@@ -1,11 +1,23 @@
-// app/api/products/route.ts (ou .js)
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-function getSupabaseClient() {
-  const cookieStore = cookies();
-  return createServerClient(
+export async function POST(request: Request) {
+  const {
+    name,
+    description,
+    price,
+    category,
+    imageUrl,
+    image,
+    version,
+    features,
+    tags,
+    isNew,
+    isFeatured,
+  } = await request.json();
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -18,127 +30,167 @@ function getSupabaseClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               (cookieStore as any).set?.(name, value, options)
             );
-          } catch {
-            // Ignora erro ao rodar em ambiente Server Component
+          } catch (e) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
       },
     }
   );
+
+  // Prefer imageUrl if provided, otherwise fallback to image
+  const image_url = imageUrl ?? image ?? null
+
+  const { data, error } = await supabase
+    .from('products')
+    .insert([
+      {
+        name,
+        description,
+        price,
+        category,
+        image_url,
+        version,
+        features,
+        tags,
+        is_new: isNew,
+        is_featured: isFeatured,
+      },
+    ])
+    .select();
+
+  if (error) {
+    return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+
+  return new NextResponse(JSON.stringify(data), { status: 201 });
 }
 
-// ✅ CREATE
-export async function POST(request: Request) {
-  try {
-    const {
+export async function PUT(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop(); // Extract ID from URL
+
+  if (!id) {
+    return new NextResponse(JSON.stringify({ error: "Product ID is required for update." }), { status: 400 });
+  }
+
+  const {
+    name,
+    description,
+    price,
+    category,
+    imageUrl,
+    image,
+    version,
+    features,
+    tags,
+    isNew,
+    isFeatured,
+  } = await request.json();
+
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              (cookieStore as any).set?.(name, value, options)
+            );
+          } catch (e) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  );
+
+  const image_url = imageUrl ?? image ?? null;
+
+  const { data, error } = await supabase
+    .from('products')
+    .update({
       name,
       description,
       price,
       category,
-      imageUrl,
-      image,
+      image_url,
       version,
       features,
       tags,
-      isNew,
-      isFeatured,
-    } = await request.json();
+      is_new: isNew,
+      is_featured: isFeatured,
+    })
+    .eq('id', id)
+    .select();
 
-    const supabase = getSupabaseClient();
-
-    const image_url = imageUrl ?? image ?? null;
-
-    const { data, error } = await supabase
-      .from("products")
-      .insert([
-        {
-          name,
-          description,
-          price,
-          category,
-          image_url,
-          version,
-          features,
-          tags,
-          is_new: isNew,
-          is_featured: isFeatured,
-        },
-      ])
-      .select();
-
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
-
-    return NextResponse.json(data, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || "Unexpected error creating product" },
-      { status: 500 }
-    );
+  if (error) {
+    return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
   }
+
+  if (!data || data.length === 0) {
+    return new NextResponse(JSON.stringify({ error: "Product not found or no changes made." }), { status: 404 });
+  }
+
+  return new NextResponse(JSON.stringify(data[0]), { status: 200 });
 }
 
-// ✅ READ ALL
 export async function GET() {
-  try {
-    const supabase = getSupabaseClient();
-    const { data: products, error } = await supabase
-      .from("products")
-      .select("*");
-
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
-
-    const mapped = (products || []).map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      price: p.price,
-      category: p.category,
-      image: p.image_url || "",
-      features: p.features || [],
-      version: p.version || "",
-      downloads: p.downloads ?? 0,
-      rating: p.rating ?? 0,
-      isNew: p.is_new ?? false,
-      isFeatured: p.is_featured ?? false,
-      tags: p.tags || [],
-    }));
-
-    return NextResponse.json(mapped, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || "Unexpected error fetching products" },
-      { status: 500 }
-    );
-  }
-}
-
-// ✅ DELETE (corrige o erro 405)
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Product ID is required" },
-        { status: 400 }
-      );
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              (cookieStore as any).set?.(name, value, options)
+            );
+          } catch (e) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
     }
+  );
 
-    const supabase = getSupabaseClient();
+  const { data: products, error } = await supabase.from('products').select('*');
 
-    const { error } = await supabase.from("products").delete().eq("id", id);
-
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
-
-    return NextResponse.json({ message: "Product deleted successfully" });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || "Unexpected error deleting product" },
-      { status: 500 }
-    );
+  if (error) {
+    return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
   }
+
+  // Map snake_case from DB to camelCase expected by frontend Product type
+  const mapped = (products || []).map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    price: p.price,
+    category: p.category,
+    image: p.image_url || "",
+    features: p.features || [],
+    version: p.version || "",
+    downloads: p.downloads ?? 0,
+    rating: p.rating ?? 0,
+    isNew: p.is_new ?? false,
+    isFeatured: p.is_featured ?? false,
+    tags: p.tags || [],
+  }));
+
+  return new NextResponse(JSON.stringify(mapped), { status: 200 });
 }

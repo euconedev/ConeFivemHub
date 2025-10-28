@@ -23,7 +23,22 @@ export default function AdminProductsPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setProducts(data);
+      const mapped: Product[] = (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        category: p.category,
+        image: p.image || p.image_url || "",
+        features: p.features || [],
+        version: p.version || "",
+        downloads: p.downloads ?? 0,
+        rating: p.rating ?? 0,
+        isNew: p.isNew ?? p.is_new ?? false,
+        isFeatured: p.isFeatured ?? p.is_featured ?? false,
+        tags: p.tags || [],
+      }))
+      setProducts(mapped);
     } catch (error) {
       console.error("Error fetching products:", error);
     }

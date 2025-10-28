@@ -7,7 +7,8 @@ import { ProductCard } from "@/components/product-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
-import { getProducts } from "@/lib/storage"
+import type { Product } from "@/lib/types"
+import { getProducts as getSupabaseProducts } from "@/lib/supabase-storage"
 
 const categories = [
   { id: "all", name: "Todos", icon: "🎮" },
@@ -21,10 +22,33 @@ const categories = [
 export default function StorePage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [products, setProducts] = useState(getProducts())
+  const [products, setProducts] = useState<Product[]>([])
 
   useEffect(() => {
-    setProducts(getProducts())
+    const fetchProducts = async () => {
+      try {
+        const data = await getSupabaseProducts()
+        const mapped: Product[] = (data || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          price: p.price,
+          category: p.category,
+          image: p.image_url || "",
+          features: p.features || [],
+          version: p.version || "",
+          downloads: p.downloads ?? 0,
+          rating: p.rating ?? 0,
+          isNew: p.is_new ?? false,
+          isFeatured: p.is_featured ?? false,
+          tags: p.tags || [],
+        }))
+        setProducts(mapped)
+      } catch (err) {
+        console.error("[store] Error loading products:", err)
+      }
+    }
+    fetchProducts()
   }, [])
 
   const filteredProducts = products.filter((product) => {

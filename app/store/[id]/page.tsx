@@ -24,6 +24,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  console.log("Product Image URL:", product.image_url); // Adicionado para depuração
+
   // Map snake_case to camelCase for consistency with Product type
   const formattedProduct: Product = {
     id: product.id,

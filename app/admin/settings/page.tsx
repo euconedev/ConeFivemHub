@@ -6,8 +6,119 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Store, CreditCard, Mail, Shield } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function AdminSettingsPage() {
+  const { toast } = useToast()
+
+  // Store Settings states
+  const [storeName, setStoreName] = useState("ConeFiveM Hub")
+  const [storeDescription, setStoreDescription] = useState("Marketplace de scripts e assets digitais para servidores FiveM")
+  const [storeEmail, setStoreEmail] = useState("contato@conefivem.com")
+  const [isSavingStore, setIsSavingStore] = useState(false)
+
+  // Payment Settings states
+  const [abacatepayToken, setAbacatepayToken] = useState("")
+  const [webhookUrl, setWebhookUrl] = useState("")
+  const [isSavingPayment, setIsSavingPayment] = useState(false)
+
+  // Email Settings states
+  const [supportEmail, setSupportEmail] = useState("suporte@conefivem.com")
+  const [notificationEmail, setNotificationEmail] = useState("notificacoes@conefivem.com")
+  const [marketingEmail, setMarketingEmail] = useState("marketing@conefivem.com")
+  const [isSavingEmail, setIsSavingEmail] = useState(false)
+
+  // Security Settings states
+  const [twoFactorAuth, setTwoFactorAuth] = useState(false)
+  const [sessionTimeout, setSessionTimeout] = useState(30) // in minutes
+  const [isSavingSecurity, setIsSavingSecurity] = useState(false)
+
+  const handleSaveStoreSettings = async () => {
+    setIsSavingStore(true)
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Here you would typically send data to your backend API
+      console.log("Saving Store Settings:", { storeName, storeDescription, storeEmail })
+      toast({
+        title: "Sucesso!",
+        description: "Configurações da loja salvas com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error saving store settings:", error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações da loja.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingStore(false)
+    }
+  }
+
+  const handleSavePaymentSettings = async () => {
+    setIsSavingPayment(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      console.log("Saving Payment Settings:", { abacatepayToken, webhookUrl })
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de pagamento salvas com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error saving payment settings:", error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações de pagamento.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingPayment(false)
+    }
+  }
+
+  const handleSaveEmailSettings = async () => {
+    setIsSavingEmail(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      console.log("Saving Email Settings:", { supportEmail, notificationEmail, marketingEmail })
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de email salvas com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error saving email settings:", error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações de email.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingEmail(false)
+    }
+  }
+
+  const handleSaveSecuritySettings = async () => {
+    setIsSavingSecurity(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      console.log("Saving Security Settings:", { twoFactorAuth, sessionTimeout })
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de segurança salvas com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error saving security settings:", error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações de segurança.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingSecurity(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -27,21 +138,33 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="store-name">Nome da Loja</Label>
-            <Input id="store-name" defaultValue="ConeFiveM Hub" />
+            <Input
+              id="store-name"
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="store-description">Descrição</Label>
             <Textarea
               id="store-description"
-              defaultValue="Marketplace de scripts e assets digitais para servidores FiveM"
+              value={storeDescription}
+              onChange={(e) => setStoreDescription(e.target.value)}
               rows={3}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="store-email">Email de Contato</Label>
-            <Input id="store-email" type="email" defaultValue="contato@conefivem.com" />
+            <Input
+              id="store-email"
+              type="email"
+              value={storeEmail}
+              onChange={(e) => setStoreEmail(e.target.value)}
+            />
           </div>
-          <Button>Salvar Alterações</Button>
+          <Button onClick={handleSaveStoreSettings} disabled={isSavingStore}>
+            {isSavingStore ? "Salvando..." : "Salvar Alterações"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -57,13 +180,26 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="abacatepay-token">AbacatePay Token</Label>
-            <Input id="abacatepay-token" type="password" placeholder="••••••••••••••••" />
+            <Input
+              id="abacatepay-token"
+              type="password"
+              placeholder="••••••••••••••••"
+              value={abacatepayToken}
+              onChange={(e) => setAbacatepayToken(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="webhook-url">Webhook URL</Label>
-            <Input id="webhook-url" placeholder="https://seu-dominio.com/api/webhook" />
+            <Input
+              id="webhook-url"
+              placeholder="https://seu-dominio.com/api/webhook"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+            />
           </div>
-          <Button>Salvar Configurações</Button>
+          <Button onClick={handleSavePaymentSettings} disabled={isSavingPayment}>
+            {isSavingPayment ? "Salvando..." : "Salvar Configurações"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -95,7 +231,36 @@ export default function AdminSettingsPage() {
             <Label htmlFor="smtp-password">Senha</Label>
             <Input id="smtp-password" type="password" placeholder="••••••••" />
           </div>
-          <Button>Salvar Configurações</Button>
+          <div className="space-y-2">
+            <Label htmlFor="support-email">Email de Suporte</Label>
+            <Input
+              id="support-email"
+              type="email"
+              value={supportEmail}
+              onChange={(e) => setSupportEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notification-email">Email de Notificações</Label>
+            <Input
+              id="notification-email"
+              type="email"
+              value={notificationEmail}
+              onChange={(e) => setNotificationEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="marketing-email">Email de Marketing</Label>
+            <Input
+              id="marketing-email"
+              type="email"
+              value={marketingEmail}
+              onChange={(e) => setMarketingEmail(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleSaveEmailSettings} disabled={isSavingEmail}>
+            {isSavingEmail ? "Salvando..." : "Salvar Configurações"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -117,7 +282,33 @@ export default function AdminSettingsPage() {
             <Label htmlFor="discord-client-secret">Discord Client Secret</Label>
             <Input id="discord-client-secret" type="password" placeholder="••••••••••••••••" />
           </div>
-          <Button>Salvar Configurações</Button>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="two-factor-auth">Autenticação de Dois Fatores</Label>
+              <p className="text-sm text-muted-foreground">
+                Exija um código de verificação adicional para fazer login.
+              </p>
+            </div>
+            <Switch
+              id="two-factor-auth"
+              checked={twoFactorAuth}
+              onCheckedChange={setTwoFactorAuth}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="session-timeout">Tempo Limite da Sessão (minutos)</Label>
+            <Input
+              id="session-timeout"
+              type="number"
+              value={sessionTimeout}
+              onChange={(e) => setSessionTimeout(Number(e.target.value))}
+              min={5}
+              max={120}
+            />
+          </div>
+          <Button onClick={handleSaveSecuritySettings} disabled={isSavingSecurity}>
+            {isSavingSecurity ? "Salvando..." : "Salvar Configurações"}
+          </Button>
         </CardContent>
       </Card>
     </div>

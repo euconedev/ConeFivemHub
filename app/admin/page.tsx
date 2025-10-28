@@ -1,186 +1,195 @@
 "use client"
 
-import { useState, useEffect  from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Edit, Trash2, Eye } from "lucide-react"
-  import { ProductForm } from "@/components/product-form"
-  import Link from "next/link"
-  import type { Product } from "@/lib/types"
-  
-  export default function AdminProductsPage() {
-    const [searchQuery, setSearchQuery] = useState("")
-    const [products, setProducts] = useState<Product[]>([])
-    const [isFormOpen, setIsFormOpen] = useState(false)
-    const [editingProduct, setEditingProduct] = useState<Product | undefined>()
-  
-    const fetchProducts = async () => {
+import { Package, Users, Key, DollarSign, TrendingUp, ShoppingCart } from "lucide-react"
+import { getProducts, getLicenses, type StorageProduct, type StorageLicense } from "@/lib/storage"
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+
+export default function AdminDashboardPage() {
+  const [products, setProducts] = useState<StorageProduct[]>([])
+  const [licenses, setLicenses] = useState<StorageLicense[]>([])
+  const [activeUsers, setActiveUsers] = useState<number>(0)
+  const supabase = getSupabaseBrowserClient()
+
+  useEffect(() => {
+    setProducts(getProducts())
+    setLicenses(getLicenses())
+
+    const fetchActiveUsers = async () => {
       try {
-        const response = await fetch("/api/products");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
-  
-    useEffect(() => {
-      fetchProducts();
-    }, []);
-  
-    const filteredProducts = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-  
-    const handleSaveProduct = () => {
-      fetchProducts(); // Re-fetch products after saving
-      setIsFormOpen(false)
-      setEditingProduct(undefined)
-    }
-  
-    const handleEditProduct = (product: Product) => {
-      setEditingProduct(product)
-      setIsFormOpen(true)
-    }
-  
-    const handleDeleteProduct = async (productId: string) => {
-      if (confirm("Tem certeza que deseja excluir este produto?")) {
-        try {
-          const response = await fetch(`/api/products?id=${productId}`, {
-            method: "DELETE",
-          });
-  
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          fetchProducts(); // Re-fetch products after deleting
-        } catch (error) {
-          console.error("Error deleting product:", error);
+        const { count, error } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+
+        if (!error && count !== null) {
+          setActiveUsers(count)
+        } else {
+          console.log("[v0] Profiles table not found or error:", error?.message)
+          setActiveUsers(0)
         }
+      } catch (err) {
+        console.log("[v0] Error fetching active users:", err)
+        setActiveUsers(0)
       }
     }
-  
-    if (isFormOpen) {
-      return (
-        <div className="space-y-6">
-          <ProductForm
-            product={editingProduct}
-            onSave={handleSaveProduct}
-            onCancel={() => {
-              setIsFormOpen(false)
-              setEditingProduct(undefined)
-            }}
-          />
-        </div>
-      )
+
+    fetchActiveUsers()
+  }, [supabase])
+
+  const totalRevenue = licenses.reduce((sum, license) => {
+    const product = products.find((p) => p.id === license.productId)
+    return sum + (product?.price || 0)
+  }, 0)
+
+  const stats = [
+    {
+      title: "Receita Total",
+      value: `R$ ${totalRevenue.toFixed(2)}`,
+      icon: DollarSign,
+      description: "+12.5% em relação ao mês passado",
+      trend: "up",
+    },
+    {
+      title: "Total de Produtos",
+      value: products.length,
+      icon: Package,
+      description: "Produtos ativos na loja",
+      trend: "neutral",
+    },
+    {
+      title: "Usuários Ativos",
+      value: activeUsers,
+      icon: Users,
+      description: "Usuários registrados no sistema",
+      trend: "up",
+    },
+    {
+      title: "Licenças Vendidas",
+      value: licenses.length,
+      icon: Key,
+      description: "Total de licenças ativas",
+      trend: "neutral",
+    },
+  ]
+
+  const recentSales = licenses.slice(0, 5).map((license) => {
+    const product = products.find((p) => p.id === license.productId)
+    return {
+      ...license,
+      product,
     }
-  
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Gerenciar Produtos</h1>
-            <p className="text-muted-foreground">Adicione, edite ou remova produtos da loja</p>
-          </div>
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Novo Produto
-          </Button>
-        </div>
-  
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar produtos..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-  
-        {/* Products Table */}
+  })
+
+  const topProducts = [...products].sort((a, b) => b.downloads - a.downloads).slice(0, 5)
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Dashboard Administrativo</h1>
+        <p className="text-muted-foreground">Visão geral do seu negócio</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon
+          return (
+            <Card key={stat.title} className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  {stat.trend === "up" && <TrendingUp className="h-3 w-3 text-primary" />}
+                  {stat.description}
+                </p>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Sales */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Produtos ({filteredProducts.length})</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Vendas Recentes
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredProducts.length === 0 ? (
+            {recentSales.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhum produto cadastrado ainda</p>
-                <Button className="mt-4 gap-2" onClick={() => setIsFormOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  Adicionar Primeiro Produto
-                </Button>
+                <p>Nenhuma venda registrada ainda</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background/50"
-                  >
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted">
+                {recentSales.map((sale) => (
+                  <div key={sale.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                    <div className="flex items-center gap-3">
+                      {sale.product && (
+                        <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
+                          <img
+                            src={sale.product.image || "/placeholder.svg"}
+                            alt={sale.product.name}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-sm">{sale.productName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(sale.purchaseDate).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">R$ {sale.product?.price.toFixed(2)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Products */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Produtos Mais Vendidos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhum produto cadastrado ainda</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topProducts.map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                      </div>
+                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
                         <img
                           src={product.image || "/placeholder.svg"}
                           alt={product.name}
                           className="object-cover w-full h-full"
                         />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold">{product.name}</h4>
-                          {product.isNew && <Badge className="bg-primary text-primary-foreground">Novo</Badge>}
-                          {product.isFeatured && <Badge variant="secondary">Destaque</Badge>}
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-1">{product.description}</p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span>v{product.version}</span>
-                          <span>{product.downloads} downloads</span>
-                          <span>⭐ {product.rating}</span>
-                          <Badge variant="outline" className="capitalize">
-                            {product.category}
-                          </Badge>
-                        </div>
-                        {product.tags && product.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {product.tags.map((tag, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-primary">R$ {product.price.toFixed(2)}</p>
+                      <div>
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.downloads} downloads</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/store/${product.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteProduct(product.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">R$ {product.price.toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
@@ -189,5 +198,6 @@ import { Search, Plus, Edit, Trash2, Eye } from "lucide-react"
           </CardContent>
         </Card>
       </div>
-    )
-  }
+    </div>
+  )
+}

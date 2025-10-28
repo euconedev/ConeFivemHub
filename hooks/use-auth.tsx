@@ -95,9 +95,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       })
 
-      console.log("Supabase signUp data:", data);
-      console.log("Supabase signUp error:", error);
-
       if (error) {
         return { success: false, error: error.message }
       }
@@ -105,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user)
       return { success: true }
     } catch (err: any) {
+      console.error("Supabase signUp exception:", err);
       return { success: false, error: err.message || "Erro ao criar conta" }
     }
   }

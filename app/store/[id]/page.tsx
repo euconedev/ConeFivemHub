@@ -57,8 +57,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="space-y-4">
               <div className="relative aspect-video rounded-lg overflow-hidden border border-border/50 bg-muted">
                 <img
-                  src={product.image || "/placeholder.svg"}
-                  alt={product.name}
+                  src={formattedProduct.image || "/placeholder.svg"}
+                  alt={formattedProduct.name}
                   className="object-cover w-full h-full"
                 />
                 <div className="absolute top-4 right-4 flex gap-2">

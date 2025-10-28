@@ -1,203 +1,130 @@
-"use client"
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, Users, Key, DollarSign, TrendingUp, ShoppingCart } from "lucide-react"
-import { getProducts, getLicenses, type StorageProduct, type StorageLicense } from "@/lib/storage"
-import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+function getSupabaseServerClient() {
+  const cookieStore = cookies();
 
-export default function AdminDashboardPage() {
-  const [products, setProducts] = useState<StorageProduct[]>([])
-  const [licenses, setLicenses] = useState<StorageLicense[]>([])
-  const [activeUsers, setActiveUsers] = useState<number>(0)
-  const supabase = getSupabaseBrowserClient()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              (cookieStore as any).set?.(name, value, options)
+            );
+          } catch {
+            // Ignora em Server Components — sessão será atualizada via middleware
+          }
+        },
+      },
+    }
+  );
+}
 
-  useEffect(() => {
-    setProducts(getProducts())
-    setLicenses(getLicenses())
+/**
+ * GET /api/products
+ * Retorna a lista de produtos com nomes de campos ajustados para o frontend.
+ */
+export async function GET() {
+  try {
+    const supabase = getSupabaseServerClient();
+    const { data: products, error } = await supabase.from("products").select("*");
 
-    const fetchActiveUsers = async () => {
-      try {
-        const { count, error } = await supabase.from("profiles").select("*", { count: "exact", head: true })
-
-        if (!error && count !== null) {
-          setActiveUsers(count)
-        } else {
-          console.log("[v0] Profiles table not found or error:", error?.message)
-          setActiveUsers(0)
-        }
-      } catch (err) {
-        console.log("[v0] Error fetching active users:", err)
-        setActiveUsers(0)
-      }
+    if (error) {
+      console.error("[GET /products] Erro Supabase:", error.message);
+      return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
     }
 
-    fetchActiveUsers()
-  }, [supabase])
+    const mapped = (products || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      category: p.category,
+      image: p.image_url || "",
+      features: p.features || [],
+      version: p.version || "",
+      downloads: p.downloads ?? 0,
+      rating: p.rating ?? 0,
+      isNew: p.is_new ?? false,
+      isFeatured: p.is_featured ?? false,
+      tags: p.tags || [],
+    }));
 
-  const totalRevenue = licenses.reduce((sum, license) => {
-    const product = products.find((p) => p.id === license.productId)
-    return sum + (product?.price || 0)
-  }, 0)
+    return new NextResponse(JSON.stringify(mapped), { status: 200 });
+  } catch (err: any) {
+    console.error("[GET /products] Erro inesperado:", err);
+    return new NextResponse(JSON.stringify({ error: err.message }), { status: 500 });
+  }
+}
 
-  const stats = [
-    {
-      title: "Receita Total",
-      value: `R$ ${totalRevenue.toFixed(2)}`,
-      icon: DollarSign,
-      description: "+12.5% em relação ao mês passado",
-      trend: "up",
-    },
-    {
-      title: "Total de Produtos",
-      value: products.length,
-      icon: Package,
-      description: "Produtos ativos na loja",
-      trend: "neutral",
-    },
-    {
-      title: "Usuários Ativos",
-      value: activeUsers,
-      icon: Users,
-      description: "Usuários registrados no sistema",
-      trend: "up",
-    },
-    {
-      title: "Licenças Vendidas",
-      value: licenses.length,
-      icon: Key,
-      description: "Total de licenças ativas",
-      trend: "neutral",
-    },
-  ]
+/**
+ * POST /api/products
+ * Cria um novo produto no banco de dados.
+ */
+export async function POST(request: Request) {
+  try {
+    const {
+      name,
+      description,
+      price,
+      category,
+      imageUrl,
+      image,
+      version,
+      features,
+      tags,
+      isNew,
+      isFeatured,
+    } = await request.json();
 
-  const recentSales = licenses.slice(0, 5).map((license) => {
-    const product = products.find((p) => p.id === license.productId)
-    return {
-      ...license,
-      product,
+    const supabase = getSupabaseServerClient();
+
+    const image_url = imageUrl ?? image ?? null;
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert([
+        {
+          name,
+          description,
+          price,
+          category,
+          image_url,
+          version,
+          features,
+          tags,
+          is_new: isNew,
+          is_featured: isFeatured,
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error("[POST /products] Erro Supabase:", error.message);
+      return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
     }
-  })
 
-  const topProducts = [...products].sort((a, b) => b.downloads - a.downloads).slice(0, 5)
+    return new NextResponse(JSON.stringify(data), { status: 201 });
+  } catch (err: any) {
+    console.error("[POST /products] Erro inesperado:", err);
+    return new NextResponse(JSON.stringify({ error: err.message }), { status: 500 });
+  }
+}
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Dashboard Administrativo</h1>
-        <p className="text-muted-foreground">Visão geral do seu negócio</p>
-      </div>
+/**
+ * Métodos não permitidos (por segurança)
+ */
+export async function PUT() {
+  return new NextResponse(JSON.stringify({ error: "Método PUT não permitido" }), { status: 405 });
+}
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <Card key={stat.title} className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-primary">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  {stat.trend === "up" && <TrendingUp className="h-3 w-3 text-primary" />}
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Recent Sales */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5" />
-              Vendas Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentSales.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhuma venda registrada ainda</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentSales.map((sale) => (
-                  <div key={sale.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                    <div className="flex items-center gap-3">
-                      {sale.product && (
-                        <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
-                          <img
-                            src={sale.product.image || "/placeholder.svg"}
-                            alt={sale.product.name}
-                            className="object-cover w-full h-full"
-                          />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium text-sm">{sale.productName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(sale.purchaseDate).toLocaleDateString("pt-BR")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-primary">R$ {sale.product?.price.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Top Products */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Produtos Mais Vendidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topProducts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhum produto cadastrado ainda</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {topProducts.map((product, index) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <span className="text-sm font-bold text-primary">#{index + 1}</span>
-                      </div>
-                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
-                        <img
-                          src={product.image || "/placeholder.svg"}
-                          alt={product.name}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.downloads} downloads</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-primary">R$ {product.price.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+export async function DELETE() {
+  return new NextResponse(JSON.stringify({ error: "Método DELETE não permitido" }), { status: 405 });
 }

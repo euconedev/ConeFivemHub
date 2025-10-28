@@ -20,6 +20,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = params;
   const product = await getSupabaseProductById(id);
 
+  console.log("Fetched Product:", product); // Novo log para depuração
+
   if (!product) {
     notFound();
   }

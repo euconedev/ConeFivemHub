@@ -33,6 +33,9 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
     isNew: product?.isNew || false,
     isFeatured: product?.isFeatured || false,
   })
+  const [newTag, setNewTag] = useState("")
+  const [newFeature, setNewFeature] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const formatCurrency = (value: string) => {
     const numericValue = value.replace(/[^0-9,]/g, '').replace(',', '.');
@@ -84,6 +87,30 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const addTag = () => {
+    if (newTag.trim() !== "" && !formData.tags.includes(newTag.trim())) {
+      setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] })
+      setNewTag("")
+    }
+  }
+
+  const removeTag = (index: number) => {
+    const updatedTags = formData.tags.filter((_, i) => i !== index)
+    setFormData({ ...formData, tags: updatedTags })
+  }
+
+  const addFeature = () => {
+    if (newFeature.trim() !== "" && !formData.features.includes(newFeature.trim())) {
+      setFormData({ ...formData, features: [...formData.features, newFeature.trim()] })
+      setNewFeature("")
+    }
+  }
+
+  const removeFeature = (index: number) => {
+    const updatedFeatures = formData.features.filter((_, i) => i !== index)
+    setFormData({ ...formData, features: updatedFeatures })
   }
 
   return (

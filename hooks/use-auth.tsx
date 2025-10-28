@@ -95,6 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       })
 
+      console.log("Supabase signUp data:", data);
+      console.log("Supabase signUp error:", error);
+
       if (error) {
         return { success: false, error: error.message }
       }

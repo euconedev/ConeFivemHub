@@ -10,9 +10,6 @@ export function getSupabaseBrowserClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  console.log('Supabase URL (client):', supabaseUrl);
-  console.log('Supabase Anon Key (client):', supabaseAnonKey);
-
   if (!supabaseUrl || !supabaseAnonKey) {
     return createBrowserClient("https://placeholder.supabase.co", "placeholder-key")
   }

@@ -5,9 +5,6 @@ export async function createServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  console.log('Supabase URL (server):', supabaseUrl);
-  console.log('Supabase Anon Key (server):', supabaseAnonKey);
-
   // Return a mock client if Supabase is not configured
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn("[v0] Supabase is not configured. Please add the Supabase integration.")

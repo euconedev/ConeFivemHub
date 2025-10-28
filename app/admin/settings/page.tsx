@@ -25,6 +25,10 @@ export default function AdminSettingsPage() {
   const [isSavingPayment, setIsSavingPayment] = useState(false)
 
   // Email Settings states
+  const [smtpHost, setSmtpHost] = useState("")
+  const [smtpPort, setSmtpPort] = useState("")
+  const [smtpUser, setSmtpUser] = useState("")
+  const [smtpPassword, setSmtpPassword] = useState("")
   const [supportEmail, setSupportEmail] = useState("suporte@conefivem.com")
   const [notificationEmail, setNotificationEmail] = useState("notificacoes@conefivem.com")
   const [marketingEmail, setMarketingEmail] = useState("marketing@conefivem.com")
@@ -217,21 +221,21 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="smtp-host">SMTP Host</Label>
-            <Input id="smtp-host" placeholder="smtp.exemplo.com" />
+            <Input id="smtp-host" placeholder="smtp.exemplo.com" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="smtp-port">Porta</Label>
-              <Input id="smtp-port" placeholder="587" />
+              <Input id="smtp-port" placeholder="587" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="smtp-user">Usuário</Label>
-              <Input id="smtp-user" placeholder="usuario@exemplo.com" />
+              <Input id="smtp-user" placeholder="usuario@exemplo.com" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtp-password">Senha</Label>
-            <Input id="smtp-password" type="password" placeholder="••••••••" />
+            <Input id="smtp-password" type="password" placeholder="••••••••" value={smtpPassword} onChange={(e) => setSmtpPassword(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="support-email">Email de Suporte</Label>

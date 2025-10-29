@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Store, CreditCard, Mail, Shield } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { getDiscordSettings, saveDiscordSettings, getPaymentSettings, savePaymentSettings } from "@/lib/supabase-storage"
+import { getDiscordClientMembers, DiscordGuildMember } from "@/lib/discord-api"
 
 export default function AdminSettingsPage() {
   const { toast } = useToast()
@@ -33,6 +34,8 @@ export default function AdminSettingsPage() {
   const [discordGuildId, setDiscordGuildId] = useState("")
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState("")
   const [isSavingDiscord, setIsSavingDiscord] = useState(false)
+  const [discordClientMembers, setDiscordClientMembers] = useState<DiscordGuildMember[]>([])
+  const [isLoadingDiscordMembers, setIsLoadingDiscordMembers] = useState(false)
 
   // Email Settings states
   const [smtpHost, setSmtpHost] = useState("")
@@ -49,6 +52,27 @@ export default function AdminSettingsPage() {
   const [sessionTimeout, setSessionTimeout] = useState(30) // in minutes
   const [isSavingSecurity, setIsSavingSecurity] = useState(false)
 
+  const loadDiscordClientMembers = async (guildId: string, botToken: string) => {
+    setIsLoadingDiscordMembers(true)
+    try {
+      const members = await getDiscordClientMembers(guildId, "cliente", botToken)
+      setDiscordClientMembers(members)
+      toast({
+        title: "Sucesso!",
+        description: "Membros clientes do Discord atualizados com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error loading Discord client members:", error)
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar membros clientes do Discord.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingDiscordMembers(false)
+    }
+  }
+
   // Load settings on component mount
   useEffect(() => {
     const loadDiscordSettings = async () => {
@@ -60,6 +84,11 @@ export default function AdminSettingsPage() {
         setDiscordBotToken(settings.discord_bot_token)
         setDiscordGuildId(settings.discord_guild_id)
         setDiscordWebhookUrl(settings.discord_webhook_url)
+
+        // Load Discord client members after settings are loaded
+        if (settings.discord_guild_id && settings.discord_bot_token) {
+          loadDiscordClientMembers(settings.discord_guild_id, settings.discord_bot_token)
+        }
       }
     }
 
@@ -220,6 +249,9 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="discord">
             <img src="/discord-icon.svg" alt="Discord Icon" className="mr-2 h-4 w-4" /> Discord
           </TabsTrigger>
+          <TabsTrigger value="discord-clients">
+            <img src="/discord-icon.svg" alt="Discord Icon" className="mr-2 h-4 w-4" /> Clientes Discord
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="store" className="space-y-4">
           <Card>
@@ -321,7 +353,7 @@ export default function AdminSettingsPage() {
                   type="password"
                   value={emailApiKey}
                   onChange={(e) => setEmailApiKey(e.target.value)}
-                  placeholder="••••••••••••••••••"
+                  placeholder="••••••••••••••••••••••"
                 />
               </div>
             </CardContent>
@@ -430,3 +462,46 @@ export default function AdminSettingsPage() {
     </div>
   )
 }
+
+<TabsContent value="discord-clients" className="space-y-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>Clientes Discord</CardTitle>
+      <CardDescription>Lista de membros do Discord com o cargo 'cliente'.</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="flex justify-end mb-4">
+        <Button
+          onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
+          disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
+        >
+          {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
+        </Button>
+      </div>
+      {isLoadingDiscordMembers ? (
+        <div>Carregando membros...</div>
+      ) : (
+        <div className="space-y-4">
+          {discordClientMembers.length === 0 ? (
+            <p>Nenhum membro cliente do Discord encontrado.</p>
+          ) : (
+            <ul className="space-y-2">
+              {discordClientMembers.map((member) => (
+                <li key={member.user.id} className="flex items-center space-x-2">
+                  {member.user.avatar && (
+                    <img
+                      src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`}
+                      alt={member.user.username}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  )}
+                  <span>{member.nick || member.user.username}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</TabsContent>

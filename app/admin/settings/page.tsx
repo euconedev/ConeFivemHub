@@ -295,6 +295,48 @@ export default function AdminSettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
+        <TabsContent value="discord-clients" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Clientes Discord</CardTitle>
+              <CardDescription>Lista de membros do Discord com o cargo 'cliente'.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
+                  disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
+                >
+                  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
+                </Button>
+              </div>
+              {isLoadingDiscordMembers ? (
+                <div>Carregando membros...</div>
+              ) : (
+                <div className="space-y-4">
+                  {discordClientMembers.length === 0 ? (
+                    <p>Nenhum membro cliente do Discord encontrado.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {discordClientMembers.map((member) => (
+                        <li key={member.user.id} className="flex items-center space-x-2">
+                          {member.user.avatar && (
+                            <img
+                              src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`}
+                              alt={member.user.username}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          )}
+                          <span>{member.nick || member.user.username}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="payment" className="space-y-4">
           <Card>
             <CardHeader>
@@ -458,50 +500,46 @@ export default function AdminSettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
-
-<TabsContent value="discord-clients" className="space-y-4">
-  <Card>
-    <CardHeader>
-      <CardTitle>Clientes Discord</CardTitle>
-      <CardDescription>Lista de membros do Discord com o cargo 'cliente'.</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="flex justify-end mb-4">
-        <Button
-          onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
-          disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
-        >
-          {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
-        </Button>
-      </div>
-      {isLoadingDiscordMembers ? (
-        <div>Carregando membros...</div>
-      ) : (
-        <div className="space-y-4">
-          {discordClientMembers.length === 0 ? (
-            <p>Nenhum membro cliente do Discord encontrado.</p>
-          ) : (
-            <ul className="space-y-2">
-              {discordClientMembers.map((member) => (
-                <li key={member.user.id} className="flex items-center space-x-2">
-                  {member.user.avatar && (
-                    <img
-                      src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`}
-                      alt={member.user.username}
-                      className="w-8 h-8 rounded-full"
-                    />
+        <TabsContent value="discord-clients" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Clientes Discord</CardTitle>
+              <CardDescription>Lista de membros do Discord com o cargo 'cliente'.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
+                  disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
+                >
+                  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
+                </Button>
+              </div>
+              {isLoadingDiscordMembers ? (
+                <div>Carregando membros...</div>
+              ) : (
+                <div className="space-y-4">
+                  {discordClientMembers.length === 0 ? (
+                    <p>Nenhum membro cliente do Discord encontrado.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {discordClientMembers.map((member) => (
+                        <li key={member.user.id} className="flex items-center space-x-2">
+                          {member.user.avatar && (
+                            <img
+                              src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`}
+                              alt={member.user.username}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          )}
+                          <span>{member.nick || member.user.username}</span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                  <span>{member.nick || member.user.username}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </CardContent>
-  </Card>
-</TabsContent>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>

@@ -52,6 +52,20 @@ export interface DiscordClient {
   joined_at: string
 }
 
+export interface DiscordSettings {
+  discord_client_id: string
+  discord_client_secret: string
+  discord_redirect_uri: string
+  discord_bot_token: string
+  discord_guild_id: string
+  discord_webhook_url: string
+}
+
+export interface PaymentSettings {
+  abacatepay_token: string
+  webhook_url: string
+}
+
 // Products
 export async function getProducts(): Promise<StorageProduct[]> {
   const supabase = getSupabaseBrowserClient()
@@ -258,4 +272,56 @@ export async function updateDiscordClientTags(clientId: string, tags: string[]):
     return false
   }
   return true
+}
+
+export async function getDiscordSettings(): Promise<DiscordSettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.from("settings").select("*").eq("id", "discord_settings").single()
+
+  if (error) {
+    console.error("[v0] Error fetching Discord settings:", error)
+    return null
+  }
+  return data
+}
+
+export async function saveDiscordSettings(settings: DiscordSettings): Promise<DiscordSettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("settings")
+    .upsert({ id: "discord_settings", ...settings })
+    .select()
+    .single()
+
+  if (error) {
+    console.error("[v0] Error saving Discord settings:", error)
+    return null
+  }
+  return data
+}
+
+export async function getPaymentSettings(): Promise<PaymentSettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.from("settings").select("*").eq("id", "payment_settings").single()
+
+  if (error) {
+    console.error("[v0] Error fetching Payment settings:", error)
+    return null
+  }
+  return data
+}
+
+export async function savePaymentSettings(settings: PaymentSettings): Promise<PaymentSettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("settings")
+    .upsert({ id: "payment_settings", ...settings })
+    .select()
+    .single()
+
+  if (error) {
+    console.error("[v0] Error saving Payment settings:", error)
+    return null
+  }
+  return data
 }

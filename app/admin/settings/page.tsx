@@ -1,32 +1,41 @@
 "use client"
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Store, CreditCard, Mail, Shield } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { getDiscordSettings, saveDiscordSettings, getPaymentSettings, savePaymentSettings } from "@/lib/supabase-storage"
+import {
+  getDiscordSettings,
+  saveDiscordSettings,
+  getPaymentSettings,
+  savePaymentSettings,
+} from "@/lib/supabase-storage"
 import { getDiscordClientMembers, DiscordGuildMember } from "@/lib/discord-api"
 
 export default function AdminSettingsPage() {
   const { toast } = useToast()
 
-  // Store Settings states
+  // Store Settings
   const [storeName, setStoreName] = useState("ConeFiveM Hub")
-  const [storeDescription, setStoreDescription] = useState("Marketplace de scripts e assets digitais para servidores FiveM")
+  const [storeUrl, setStoreUrl] = useState("https://conefivem.com")
+  const [storeDescription, setStoreDescription] = useState(
+    "Marketplace de scripts e assets digitais para servidores FiveM"
+  )
   const [storeEmail, setStoreEmail] = useState("contato@conefivem.com")
   const [isSavingStore, setIsSavingStore] = useState(false)
 
-  // Payment Settings states
+  // Payment Settings
   const [abacatepayToken, setAbacatepayToken] = useState("")
   const [webhookUrl, setWebhookUrl] = useState("")
   const [isSavingPayment, setIsSavingPayment] = useState(false)
 
-  // Discord Settings states
+  // Discord Settings
   const [discordClientId, setDiscordClientId] = useState("")
   const [discordClientSecret, setDiscordClientSecret] = useState("")
   const [discordRedirectUri, setDiscordRedirectUri] = useState("")
@@ -37,19 +46,14 @@ export default function AdminSettingsPage() {
   const [discordClientMembers, setDiscordClientMembers] = useState<DiscordGuildMember[]>([])
   const [isLoadingDiscordMembers, setIsLoadingDiscordMembers] = useState(false)
 
-  // Email Settings states
-  const [smtpHost, setSmtpHost] = useState("")
-  const [smtpPort, setSmtpPort] = useState("")
-  const [smtpUser, setSmtpUser] = useState("")
-  const [smtpPassword, setSmtpPassword] = useState("")
-  const [supportEmail, setSupportEmail] = useState("suporte@conefivem.com")
-  const [notificationEmail, setNotificationEmail] = useState("notificacoes@conefivem.com")
-  const [marketingEmail, setMarketingEmail] = useState("marketing@conefivem.com")
+  // Email Settings
+  const [emailSender, setEmailSender] = useState("")
+  const [emailApiKey, setEmailApiKey] = useState("")
   const [isSavingEmail, setIsSavingEmail] = useState(false)
 
-  // Security Settings states
-  const [twoFactorAuth, setTwoFactorAuth] = useState(false)
-  const [sessionTimeout, setSessionTimeout] = useState(30) // in minutes
+  // Security Settings
+  const [twoFactorAuthEnabled, setTwoFactorAuthEnabled] = useState(false)
+  const [sessionTimeout, setSessionTimeout] = useState(30)
   const [isSavingSecurity, setIsSavingSecurity] = useState(false)
 
   const loadDiscordClientMembers = async (guildId: string, botToken: string) => {
@@ -73,7 +77,6 @@ export default function AdminSettingsPage() {
     }
   }
 
-  // Load settings on component mount
   useEffect(() => {
     const loadDiscordSettings = async () => {
       const settings = await getDiscordSettings()
@@ -85,7 +88,6 @@ export default function AdminSettingsPage() {
         setDiscordGuildId(settings.discord_guild_id)
         setDiscordWebhookUrl(settings.discord_webhook_url)
 
-        // Load Discord client members after settings are loaded
         if (settings.discord_guild_id && settings.discord_bot_token) {
           loadDiscordClientMembers(settings.discord_guild_id, settings.discord_bot_token)
         }
@@ -107,22 +109,11 @@ export default function AdminSettingsPage() {
   const handleSaveStoreSettings = async () => {
     setIsSavingStore(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    try {
-      // console.log("Saving Store Settings:", { storeName, storeDescription, storeEmail })
-      toast({
-        title: "Sucesso!",
-        description: "Configurações da loja salvas com sucesso.",
-      })
-    } catch (error) {
-      console.error("Error saving store settings:", error)
-      toast({
-        title: "Erro",
-        description: "Falha ao salvar configurações da loja.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSavingStore(false)
-    }
+    toast({
+      title: "Sucesso!",
+      description: "Configurações da loja salvas com sucesso.",
+    })
+    setIsSavingStore(false)
   }
 
   const handleSavePaymentSettings = async () => {
@@ -138,11 +129,9 @@ export default function AdminSettingsPage() {
           title: "Sucesso!",
           description: "Configurações de pagamento salvas com sucesso.",
         })
-      } else {
-        throw new Error("Failed to save payment settings.")
-      }
+      } else throw new Error("Failed to save payment settings.")
     } catch (error) {
-      console.error("Error saving payment settings:", error)
+      console.error(error)
       toast({
         title: "Erro",
         description: "Falha ao salvar configurações de pagamento.",
@@ -156,43 +145,21 @@ export default function AdminSettingsPage() {
   const handleSaveEmailSettings = async () => {
     setIsSavingEmail(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    try {
-      // console.log("Saving Email Settings:", { emailSender, emailApiKey })
-      toast({
-        title: "Sucesso!",
-        description: "Configurações de e-mail salvas com sucesso.",
-      })
-    } catch (error) {
-      console.error("Error saving email settings:", error)
-      toast({
-        title: "Erro",
-        description: "Falha ao salvar configurações de e-mail.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSavingEmail(false)
-    }
+    toast({
+      title: "Sucesso!",
+      description: "Configurações de e-mail salvas com sucesso.",
+    })
+    setIsSavingEmail(false)
   }
 
   const handleSaveSecuritySettings = async () => {
     setIsSavingSecurity(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    try {
-      // console.log("Saving Security Settings:", { twoFactorAuthEnabled })
-      toast({
-        title: "Sucesso!",
-        description: "Configurações de segurança salvas com sucesso.",
-      })
-    } catch (error) {
-      console.error("Error saving security settings:", error)
-      toast({
-        title: "Erro",
-        description: "Falha ao salvar configurações de segurança.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSavingSecurity(false)
-    }
+    toast({
+      title: "Sucesso!",
+      description: "Configurações de segurança salvas com sucesso.",
+    })
+    setIsSavingSecurity(false)
   }
 
   const handleSaveDiscordSettings = async () => {
@@ -212,11 +179,9 @@ export default function AdminSettingsPage() {
           title: "Sucesso!",
           description: "Configurações do Discord salvas com sucesso.",
         })
-      } else {
-        throw new Error("Failed to save Discord settings.")
-      }
+      } else throw new Error("Failed to save Discord settings.")
     } catch (error) {
-      console.error("Error saving Discord settings:", error)
+      console.error(error)
       toast({
         title: "Erro",
         description: "Falha ao salvar configurações do Discord.",
@@ -253,6 +218,8 @@ export default function AdminSettingsPage() {
             <img src="/discord-icon.svg" alt="Discord Icon" className="mr-2 h-4 w-4" /> Clientes Discord
           </TabsTrigger>
         </TabsList>
+
+        {/* Loja */}
         <TabsContent value="store" className="space-y-4">
           <Card>
             <CardHeader>
@@ -262,21 +229,11 @@ export default function AdminSettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="storeName">Nome da Loja</Label>
-                <Input
-                  id="storeName"
-                  value={storeName}
-                  onChange={(e) => setStoreName(e.target.value)}
-                  placeholder="Minha Loja Inc."
-                />
+                <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="storeUrl">URL da Loja</Label>
-                <Input
-                  id="storeUrl"
-                  value={storeUrl}
-                  onChange={(e) => setStoreUrl(e.target.value)}
-                  placeholder="https://minhaloja.com"
-                />
+                <Input id="storeUrl" value={storeUrl} onChange={(e) => setStoreUrl(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="storeDescription">Descrição da Loja</Label>
@@ -284,7 +241,6 @@ export default function AdminSettingsPage() {
                   id="storeDescription"
                   value={storeDescription}
                   onChange={(e) => setStoreDescription(e.target.value)}
-                  placeholder="Uma breve descrição da sua loja."
                 />
               </div>
             </CardContent>
@@ -295,140 +251,8 @@ export default function AdminSettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
-        <TabsContent value="discord-clients" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Clientes Discord</CardTitle>
-              <CardDescription>Lista de membros do Discord com o cargo 'cliente'.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-end mb-4">
-                <Button
-                  onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
-                  disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
-                >
-                  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
-                </Button>
-              </div>
-              {isLoadingDiscordMembers ? (
-                <div>Carregando membros...</div>
-              ) : (
-                <div className="space-y-4">
-                  {discordClientMembers.length === 0 ? (
-                    <p>Nenhum membro cliente do Discord encontrado.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {discordClientMembers.map((member) => (
-                        <li key={member.user.id} className="flex items-center space-x-2">
-                          {member.user.avatar && (
-                            <img
-                              src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`}
-                              alt={member.user.username}
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          <span>{member.nick || member.user.username}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="payment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Pagamento</CardTitle>
-              <CardDescription>Configure seus métodos de pagamento.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="abacatepayToken">AbacatePay Token</Label>
-                <Input
-                  id="abacatepayToken"
-                  type="password"
-                  value={abacatepayToken}
-                  onChange={(e) => setAbacatepayToken(e.target.value)}
-                  placeholder="Seu token AbacatePay"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="webhookUrl">URL do Webhook</Label>
-                <Input
-                  id="webhookUrl"
-                  type="url"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  placeholder="https://seusite.com/webhook"
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={handleSavePaymentSettings} disabled={isSavingPayment}>
-                {isSavingPayment ? "Salvando..." : "Salvar alterações"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        <TabsContent value="email" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de E-mail</CardTitle>
-              <CardDescription>Gerencie as configurações de envio de e-mail.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="emailSender">Remetente de E-mail</Label>
-                <Input
-                  id="emailSender"
-                  value={emailSender}
-                  onChange={(e) => setEmailSender(e.target.value)}
-                  placeholder="noreply@minhaloja.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="emailApiKey">Chave de API de E-mail</Label>
-                <Input
-                  id="emailApiKey"
-                  type="password"
-                  value={emailApiKey}
-                  onChange={(e) => setEmailApiKey(e.target.value)}
-                  placeholder="••••••••••••••••••••••"
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={handleSaveEmailSettings} disabled={isSavingEmail}>
-                {isSavingEmail ? "Salvando..." : "Salvar alterações"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Segurança</CardTitle>
-              <CardDescription>Gerencie as configurações de segurança da sua conta.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="twoFactorAuthEnabled"
-                  checked={twoFactorAuthEnabled}
-                  onCheckedChange={setTwoFactorAuthEnabled}
-                />
-                <Label htmlFor="twoFactorAuthEnabled">Autenticação de dois fatores</Label>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={handleSaveSecuritySettings} disabled={isSavingSecurity}>
-                {isSavingSecurity ? "Salvando..." : "Salvar alterações"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+
+        {/* Discord */}
         <TabsContent value="discord" className="space-y-4">
           <Card>
             <CardHeader>
@@ -438,12 +262,7 @@ export default function AdminSettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="discordClientId">Client ID</Label>
-                <Input
-                  id="discordClientId"
-                  value={discordClientId}
-                  onChange={(e) => setDiscordClientId(e.target.value)}
-                  placeholder="Seu Client ID do Discord"
-                />
+                <Input id="discordClientId" value={discordClientId} onChange={(e) => setDiscordClientId(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="discordClientSecret">Client Secret</Label>
@@ -452,17 +271,11 @@ export default function AdminSettingsPage() {
                   type="password"
                   value={discordClientSecret}
                   onChange={(e) => setDiscordClientSecret(e.target.value)}
-                  placeholder="Seu Client Secret do Discord"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="discordRedirectUri">Redirect URI</Label>
-                <Input
-                  id="discordRedirectUri"
-                  value={discordRedirectUri}
-                  onChange={(e) => setDiscordRedirectUri(e.target.value)}
-                  placeholder="Sua Redirect URI do Discord"
-                />
+                <Input id="discordRedirectUri" value={discordRedirectUri} onChange={(e) => setDiscordRedirectUri(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="discordBotToken">Bot Token</Label>
@@ -471,17 +284,11 @@ export default function AdminSettingsPage() {
                   type="password"
                   value={discordBotToken}
                   onChange={(e) => setDiscordBotToken(e.target.value)}
-                  placeholder="Seu Bot Token do Discord"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="discordGuildId">Guild ID</Label>
-                <Input
-                  id="discordGuildId"
-                  value={discordGuildId}
-                  onChange={(e) => setDiscordGuildId(e.target.value)}
-                  placeholder="Seu Guild ID do Discord"
-                />
+                <Input id="discordGuildId" value={discordGuildId} onChange={(e) => setDiscordGuildId(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="discordWebhookUrl">Webhook URL</Label>
@@ -489,7 +296,6 @@ export default function AdminSettingsPage() {
                   id="discordWebhookUrl"
                   value={discordWebhookUrl}
                   onChange={(e) => setDiscordWebhookUrl(e.target.value)}
-                  placeholder="Sua Webhook URL do Discord"
                 />
               </div>
             </CardContent>
@@ -500,6 +306,8 @@ export default function AdminSettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
+
+        {/* Clientes Discord */}
         <TabsContent value="discord-clients" className="space-y-4">
           <Card>
             <CardHeader>
@@ -543,3 +351,6 @@ export default function AdminSettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  )
+}

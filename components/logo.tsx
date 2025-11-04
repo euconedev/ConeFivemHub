@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
@@ -9,9 +10,7 @@ export function Logo({ className = "" }: { className?: string }) {
         </div>
       </div>
       <div className="flex flex-col">
-        <span className="font-bold text-lg leading-none bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent">
-          Cone Studios
-        </span>
+        <Image src="/conestudios.png" alt="Cone Studios Logo" width={120} height={40} />
         <span className="text-xs text-muted-foreground leading-none mt-0.5">Premium FiveM Assets</span>
       </div>
     </Link>

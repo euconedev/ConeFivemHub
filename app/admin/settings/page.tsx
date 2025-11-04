@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -339,6 +339,45 @@ export default function AdminSettingsPage() {
           </Card>
         </TabsContent>
 
+        {/* Pagamento */}
+        <TabsContent value="payment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Pagamento</CardTitle>
+              <CardDescription>Gerencie suas integrações de pagamento.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="abacatepayToken">Token AbacatePay</Label>
+                  <Input
+                    id="abacatepayToken"
+                    type="password"
+                    placeholder="sk_live_xxxxxx"
+                    value={abacatepayToken}
+                    onChange={(e) => setAbacatepayToken(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="webhookUrl">Webhook URL</Label>
+                  <Input
+                    id="webhookUrl"
+                    type="url"
+                    placeholder="https://discord.com/api/webhooks/xxxxxx/xxxxxx"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button onClick={handleSavePaymentSettings} disabled={isSavingPayment}>
+                {isSavingPayment ? "Salvando..." : "Salvar alterações"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
         {/* Discord */}
         <TabsContent value="discord" className="space-y-4">
           <Card>
@@ -437,49 +476,6 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
-
-        {/* Pagamento */}
-        <TabsContent value="payment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Pagamento</CardTitle>
-              <CardDescription>Gerencie suas integrações de pagamento.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="abacatepayToken">Token AbacatePay</Label>
-                  <Input
-                    id="abacatepayToken"
-                    type="password"
-                    placeholder="sk_live_xxxxxx"
-                    value={abacatepayToken}
-                    onChange={(e) => setAbacatepayToken(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="webhookUrl">Webhook URL</Label>
-                  <Input
-                    id="webhookUrl"
-                    type="url"
-                    placeholder="https://discord.com/api/webhooks/xxxxxx/xxxxxx"
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={handleSavePaymentSettings} disabled={isSavingPayment}>
-                {isSavingPayment ? "Salvando..." : "Salvar alterações"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
 
         {/* Email */}
         <TabsContent value="email" className="space-y-4">
@@ -554,7 +550,7 @@ export default function AdminSettingsPage() {
                   id="sessionTimeout"
                   type="number"
                   value={sessionTimeout}
-                  onChange={(e) => setSessionTimeout(Number(e.target.value))}
+                  onChange={(e) => setSessionTimeout(Number(e.target.value))}'''
                 />
               </div>
               <div className="space-y-2">
@@ -583,3 +579,7 @@ export default function AdminSettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

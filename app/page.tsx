@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Zap, Star, Package, Headphones } from "lucide-react"
+import { ArrowRight, Zap, Star, Package, Headphones, Building, Shirt, Car, Paintbrush, Key, Laptop, Wrench, Megaphone, Music, Briefcase } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -53,12 +53,31 @@ export default function HomePage() {
               </div>
 
               <div className="grid gap-4">
-                {[
-                  { icon: "Building", title: "Bases Completas", desc: "Scripts prontos e otimizados." },
-                  { icon: "Shirt", title: "Roupas & Skins", desc: "Visual exclusivo para sua cidade." },
-                  { icon: "Car", title: "Veículos exclusivos", desc: "Modelos personalizados." },
-                  { icon: "Paintbrush", title: "Design Gráfico", desc: "Identidade visual completa." },
-                  { icon: "Key", title: "Key's", desc: "Patreon 64, 128 e 2048 slots." },
+                {[{
+                  icon: <Package className="h-6 w-6 text-white" />,
+                  title: "Bases Completas",
+                  desc: "Scripts prontos e otimizados."
+                },
+                {
+                  icon: <Shirt className="h-6 w-6 text-white" />,
+                  title: "Roupas & Skins",
+                  desc: "Visual exclusivo para sua cidade."
+                },
+                {
+                  icon: <Car className="h-6 w-6 text-white" />,
+                  title: "Veículos exclusivos",
+                  desc: "Modelos personalizados."
+                },
+                {
+                  icon: <Paintbrush className="h-6 w-6 text-white" />,
+                  title: "Design Gráfico",
+                  desc: "Identidade visual completa."
+                },
+                {
+                  icon: <Key className="h-6 w-6 text-white" />,
+                  title: "Key's",
+                  desc: "Patreon 64, 128 e 2048 slots."
+                },
                 ].map((item, i) => (
                   <div key={i} className="bg-background border-2 border-border p-6 rounded-xl hover:border-primary transition-all group">
                     <div className="flex items-start gap-4">
@@ -84,13 +103,36 @@ export default function HomePage() {
               </div>
 
               <div className="grid gap-4">
-                {[
-                  { icon: "Laptop", title: "Programador\\Desenvolvedor", desc: "Atendimentos privados." },
-                  { icon: "Wrench", title: "Configuração Geral", desc: "Otimização de scripts." },
-                  { icon: "Headset", title: "Suporte VIP", desc: "Atendimento premium." },
-                  { icon: "Megaphone", title: "Divulgação", desc: "Aumente a visibilidade." },
-                  { icon: "Music", title: "Músicas exclusivas", desc: "Para trailers e loadings." },
-                  { icon: "Briefcase", title: "Consultorias", desc: "Orientação especializada." },
+                {[{
+                  icon: <Laptop className="h-6 w-6 text-white" />,
+                  title: "Programador\\Desenvolvedor",
+                  desc: "Atendimentos privados."
+                },
+                {
+                  icon: <Wrench className="h-6 w-6 text-white" />,
+                  title: "Configuração Geral",
+                  desc: "Otimização de scripts."
+                },
+                {
+                  icon: <Headphones className="h-6 w-6 text-white" />,
+                  title: "Suporte VIP",
+                  desc: "Atendimento premium."
+                },
+                {
+                  icon: <Megaphone className="h-6 w-6 text-white" />,
+                  title: "Divulgação",
+                  desc: "Aumente a visibilidade."
+                },
+                {
+                  icon: <Music className="h-6 w-6 text-white" />,
+                  title: "Músicas exclusivas",
+                  desc: "Para trailers e loadings."
+                },
+                {
+                  icon: <Briefcase className="h-6 w-6 text-white" />,
+                  title: "Consultorias",
+                  desc: "Orientação especializada."
+                },
                 ].map((item, i) => (
                   <div key={i} className="bg-background border-2 border-border p-6 rounded-xl hover:border-primary transition-all group">
                     <div className="flex items-start gap-4">

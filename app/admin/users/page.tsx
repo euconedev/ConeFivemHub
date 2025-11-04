@@ -53,7 +53,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <CardTitle>Usuários ({filteredUsers.length})</CardTitle>
         </CardHeader>
@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
                 return (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background/50"
+                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background"
                   >
                     <div className="flex items-center gap-4 flex-1">
                       <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">

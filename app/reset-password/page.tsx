@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-background/95">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,156,0.05),transparent_50%)]" />
 
-      <Card className="w-full max-w-md relative border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md relative border-border/50 bg-card">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
             <Logo size="lg" />

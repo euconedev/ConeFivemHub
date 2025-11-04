@@ -125,7 +125,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Profile Settings */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />

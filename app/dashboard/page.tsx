@@ -56,7 +56,7 @@ export default function DashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title} className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <Card key={stat.title} className="border-border/50 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -71,7 +71,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Licenses */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Licenças Recentes</CardTitle>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={license.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background/50"
+                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background"
                   >
                     <div className="flex items-center gap-4">
                       {product && (
@@ -128,7 +128,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <CardTitle>Ações Rápidas</CardTitle>
         </CardHeader>

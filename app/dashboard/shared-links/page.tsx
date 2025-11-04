@@ -54,7 +54,7 @@ export default function SharedLinksPage() {
       </div>
 
       {sharedLinks.length === 0 ? (
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <Card className="border-border/50 bg-card">
           <CardContent className="py-12">
             <div className="text-center space-y-4">
               <div className="flex justify-center">
@@ -81,7 +81,7 @@ export default function SharedLinksPage() {
       ) : (
         <div className="grid gap-4">
           {sharedLinks.map((link) => (
-            <Card key={link.id} className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <Card key={link.id} className="border-border/50 bg-card">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -92,7 +92,7 @@ export default function SharedLinksPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <div className="flex items-center gap-2 p-3 bg-background rounded-lg">
                   <code className="flex-1 text-sm text-muted-foreground truncate">
                     {window.location.origin}/shared/{link.token}
                   </code>

@@ -75,7 +75,7 @@ export default function AdminDiscordPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <Card className="border-border/50 bg-card">
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-primary">{clients.length}</div>
             <p className="text-sm text-muted-foreground">Clientes Conectados</p>

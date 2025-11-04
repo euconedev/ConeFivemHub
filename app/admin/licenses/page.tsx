@@ -54,7 +54,7 @@ export default function AdminLicensesPage() {
       </div>
 
       {/* Licenses Table */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <CardTitle>Licenças ({filteredLicenses.length})</CardTitle>
         </CardHeader>
@@ -70,7 +70,7 @@ export default function AdminLicensesPage() {
                 return (
                   <div
                     key={license.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background/50"
+                    className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background"
                   >
                     <div className="flex items-center gap-4 flex-1">
                       {product && (

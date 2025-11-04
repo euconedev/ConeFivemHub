@@ -123,7 +123,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Products Table */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <CardTitle>Produtos ({filteredProducts.length})</CardTitle>
         </CardHeader>
@@ -141,7 +141,7 @@ export default function AdminProductsPage() {
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background/50"
+                  className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted">

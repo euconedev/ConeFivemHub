@@ -79,7 +79,7 @@ export default function AdminDashboardClient({ initialActiveUsers }: AdminDashbo
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title} className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <Card key={stat.title} className="border-border/50 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -98,7 +98,7 @@ export default function AdminDashboardClient({ initialActiveUsers }: AdminDashbo
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Sales */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <Card className="border-border/50 bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
@@ -113,7 +113,7 @@ export default function AdminDashboardClient({ initialActiveUsers }: AdminDashbo
             ) : (
               <div className="space-y-4">
                 {recentSales.map((sale) => (
-                  <div key={sale.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                  <div key={sale.id} className="flex items-center justify-between p-3 rounded-lg bg-background">
                     <div className="flex items-center gap-3">
                       {sale.product && (
                         <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted">
@@ -142,7 +142,7 @@ export default function AdminDashboardClient({ initialActiveUsers }: AdminDashbo
         </Card>
 
         {/* Top Products */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <Card className="border-border/50 bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
@@ -157,7 +157,7 @@ export default function AdminDashboardClient({ initialActiveUsers }: AdminDashbo
             ) : (
               <div className="space-y-4">
                 {topProducts.map((product, index) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                  <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-background">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
                         <span className="text-sm font-bold text-primary">#{index + 1}</span>

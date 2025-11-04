@@ -95,7 +95,7 @@ export default function LicensesPage() {
       {/* Licenses List */}
       <div className="space-y-4">
         {filteredLicenses.length === 0 ? (
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <Card className="border-border/50 bg-card">
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">Nenhuma licença encontrada</p>
               <Link href="/store">

@@ -220,3 +220,20 @@
   background: rgba(236, 72, 153, 0.15);
   border: 1px solid rgba(236, 72, 153, 0.3);
 }
+
+.fill-primary {
+  fill: rgb(var(--primary));
+}
+
+.text-primary {
+  color: rgb(var(--primary));
+}
+
+.from-primary {
+  --tw-gradient-from: rgb(var(--primary)) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(var(--primary)) 0 var(--tw-gradient-to-position);
+}
+
+.to-secondary {
+  --tw-gradient-to: rgb(var(--secondary)) var(--tw-gradient-to-position);
+}

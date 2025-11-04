@@ -21,24 +21,21 @@ export function Header() {
   const isLoggedIn = !!user
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Logo />
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Início
             </Link>
-            <Link href="/store" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            <Link href="/store" className="text-sm font-medium text-primary">
               Loja
             </Link>
             {isLoggedIn && (
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-              >
+              <Link href="/dashboard" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                 Dashboard
               </Link>
             )}
@@ -56,11 +53,11 @@ export function Header() {
                 {isLoggedIn ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" className="border border-border">
                         <User className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className="w-56 bg-card border-2 border-border">
                       <DropdownMenuLabel>
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-medium leading-none">{user.user_metadata?.name || "Usuário"}</p>
@@ -94,10 +91,10 @@ export function Header() {
                   </DropdownMenu>
                 ) : (
                   <>
-                    <Button variant="ghost" asChild>
+                    <Button variant="ghost" asChild className="border border-border">
                       <Link href="/login">Entrar</Link>
                     </Button>
-                    <Button className="glow-primary-hover" asChild>
+                    <Button className="bg-primary hover:bg-primary/90" asChild>
                       <Link href="/signup">Criar Conta</Link>
                     </Button>
                   </>
@@ -107,39 +104,27 @@ export function Header() {
           </div>
 
           {/* Mobile Menu Button */}
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <Button variant="ghost" size="icon" className="md:hidden border border-border" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             <Menu className="h-6 w-6" />
           </Button>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 space-y-3 border-t border-border">
-            <Link
-              href="/"
-              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-            >
+          <nav className="md:hidden py-4 space-y-3 border-t-2 border-border bg-card">
+            <Link href="/" className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2">
               Início
             </Link>
-            <Link
-              href="/store"
-              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-            >
+            <Link href="/store" className="block text-sm font-medium text-primary py-2">
               Loja
             </Link>
             {isLoggedIn && (
               <>
-                <Link
-                  href="/dashboard"
-                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-                >
+                <Link href="/dashboard" className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2">
                   Dashboard
                 </Link>
                 {isAdmin && (
-                  <Link
-                    href="/admin"
-                    className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-                  >
+                  <Link href="/admin" className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2">
                     Admin
                   </Link>
                 )}
@@ -149,16 +134,16 @@ export function Header() {
               {!loading && (
                 <>
                   {isLoggedIn ? (
-                    <Button variant="outline" className="w-full bg-transparent" onClick={() => signOut()}>
+                    <Button variant="outline" className="w-full border-2 border-border" onClick={() => signOut()}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Sair
                     </Button>
                   ) : (
                     <>
-                      <Button variant="outline" className="w-full bg-transparent" asChild>
+                      <Button variant="outline" className="w-full border-2 border-border" asChild>
                         <Link href="/login">Entrar</Link>
                       </Button>
-                      <Button className="w-full glow-primary-hover" asChild>
+                      <Button className="w-full bg-primary hover:bg-primary/90" asChild>
                         <Link href="/signup">Criar Conta</Link>
                       </Button>
                     </>

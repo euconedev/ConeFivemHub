@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { getAbacatePayClient } from "@/lib/abacate-pay"
+import { getDiscordSettings } from "@/lib/supabase-storage"
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,6 +62,24 @@ export async function GET(request: NextRequest) {
           license_key: licenseData || `LIC-${Date.now()}`,
           status: "active",
         })
+
+        // Enviar webhook para o Discord
+        const discordSettings = await getDiscordSettings()
+        if (discordSettings?.discord_webhook_url) {
+          try {
+            await fetch(discordSettings.discord_webhook_url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                content: `Novo pagamento recebido!\nProduto: ${purchase.product_id}\nUsuário: ${user.email}\nValor: R$ ${purchase.amount}`, // Ajuste conforme necessário
+              }),
+            })
+          } catch (webhookError) {
+            console.error("[Discord Webhook] Erro ao enviar webhook:", webhookError)
+          }
+        }
       }
     }
 

@@ -66,6 +66,16 @@ export interface PaymentSettings {
   webhook_url: string
 }
 
+export interface EmailSettings {
+  email_sender: string
+  email_api_key: string
+}
+
+export interface SecuritySettings {
+  two_factor_auth_enabled: boolean
+  session_timeout: number
+}
+
 // Products
 export async function getProducts(): Promise<StorageProduct[]> {
   const supabase = getSupabaseBrowserClient()
@@ -319,26 +329,120 @@ export async function saveDiscordSettings(settings: DiscordSettings): Promise<Di
 
 export async function getPaymentSettings(): Promise<PaymentSettings | null> {
   const supabase = getSupabaseBrowserClient()
-  const { data, error } = await supabase.from("settings").select("*").eq("id", "payment_settings").single()
+  const { data, error } = await supabase.from("settings").select("*").eq("id", "payment_settings")
 
   if (error) {
     console.error("[v0] Error fetching Payment settings:", error)
     return null
   }
-  return data
+
+  if (!data || data.length === 0) return null
+
+  const aggregatedSettings: Partial<PaymentSettings> = {}
+  data.forEach(setting => {
+    aggregatedSettings[setting.key as keyof PaymentSettings] = JSON.parse(setting.value)
+  })
+
+  return aggregatedSettings as PaymentSettings
 }
 
 export async function savePaymentSettings(settings: PaymentSettings): Promise<PaymentSettings | null> {
   const supabase = getSupabaseBrowserClient()
-  const { data, error } = await supabase
-    .from("settings")
-    .upsert({ id: "payment_settings", ...settings })
-    .select()
-    .single()
+  const upsertPromises = Object.entries(settings).map(([key, value]) => {
+    return supabase
+      .from("settings")
+      .upsert({ id: "payment_settings", type: "payment", key: key, value: JSON.stringify(value) }, { onConflict: 'type,key' })
+      .select()
+      .single()
+  })
+
+  const results = await Promise.all(upsertPromises);
+  const errors = results.filter(result => result && result.error).map(result => result?.error);
+
+  if (errors.length > 0) {
+    console.error("[v0] Error saving Payment settings:", errors);
+    return null;
+  }
+
+  return settings;
+}
+
+export async function getEmailSettings(): Promise<EmailSettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.from("settings").select("*").eq("id", "email_settings")
 
   if (error) {
-    console.error("[v0] Error saving Payment settings:", error)
+    console.error("[v0] Error fetching Email settings:", error)
     return null
   }
-  return data
+
+  if (!data || data.length === 0) return null
+
+  const aggregatedSettings: Partial<EmailSettings> = {}
+  data.forEach(setting => {
+    aggregatedSettings[setting.key as keyof EmailSettings] = JSON.parse(setting.value)
+  })
+
+  return aggregatedSettings as EmailSettings
+}
+
+export async function saveEmailSettings(settings: EmailSettings): Promise<EmailSettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const upsertPromises = Object.entries(settings).map(([key, value]) => {
+    return supabase
+      .from("settings")
+      .upsert({ id: "email_settings", type: "email", key: key, value: JSON.stringify(value) }, { onConflict: 'type,key' })
+      .select()
+      .single()
+  })
+
+  const results = await Promise.all(upsertPromises);
+  const errors = results.filter(result => result && result.error).map(result => result?.error);
+
+  if (errors.length > 0) {
+    console.error("[v0] Error saving Email settings:", errors);
+    return null;
+  }
+
+  return settings;
+}
+
+export async function getSecuritySettings(): Promise<SecuritySettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.from("settings").select("*").eq("id", "security_settings")
+
+  if (error) {
+    console.error("[v0] Error fetching Security settings:", error)
+    return null
+  }
+
+  if (!data || data.length === 0) return null
+
+  const aggregatedSettings: Partial<SecuritySettings> = {}
+  data.forEach(setting => {
+    aggregatedSettings[setting.key as keyof SecuritySettings] = JSON.parse(setting.value)
+  })
+
+  return aggregatedSettings as SecuritySettings
+}
+
+export async function saveSecuritySettings(settings: SecuritySettings): Promise<SecuritySettings | null> {
+  const supabase = getSupabaseBrowserClient()
+  const upsertPromises = Object.entries(settings).map(([key, value]) => {
+    return supabase
+      .from("settings")
+      .upsert({ id: "security_settings", type: "security", key: key, value: JSON.stringify(value) }, { onConflict: 'type,key' })
+      .select()
+      .single()
+  })
+
+  const results = await Promise.all(upsertPromises);
+  const errors = results.filter(result => result && result.error).map(result => result?.error);
+
+  if (errors.length > 0) {
+    console.error("[v0] Error saving Security settings:", errors);
+    return null;
+  }
+
+  return settings;
 }

@@ -147,7 +147,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <CardTitle>{product ? "Editar Produto" : "Novo Produto"}</CardTitle>
         </CardHeader>

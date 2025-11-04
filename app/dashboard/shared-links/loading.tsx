@@ -11,7 +11,7 @@ export default function SharedLinksLoading() {
 
       <div className="grid gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i}<Card className="border-border/50 bg-card">
+          <Card key={i} className="border-border/50 bg-card">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-2 flex-1">

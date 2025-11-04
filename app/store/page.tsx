@@ -95,7 +95,7 @@ export default function StorePage() {
                 <Input
                   type="search"
                   placeholder="Buscar produtos..."
-                  className="pl-10 h-12 bg-card/50 backdrop-blur-sm"
+                  className="pl-10 h-12 bg-card backdrop-blur-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -105,7 +105,7 @@ export default function StorePage() {
         </section>
 
         {/* Categories */}
-        <section className="py-8 px-4 border-y border-border/50 bg-card/30 backdrop-blur-sm">
+        <section className="py-8 px-4 border-y border-border bg-card backdrop-blur-none">
           <div className="container mx-auto max-w-7xl">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {categories.map((category) => (

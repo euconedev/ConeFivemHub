@@ -275,7 +275,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-card border border-border p-6 rounded-xl space-y-4 hover:border-purple-500/50 transition-all">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xl">
                   Z
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                   ))}
                 </div>
                 <span className="text-xs text-muted-foreground">Avaliação: 5/5</span>
@@ -317,7 +317,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                   ))}
                 </div>
                 <span className="text-xs text-muted-foreground">Avaliação: 5/5</span>
@@ -342,7 +342,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                   ))}
                 </div>
                 <span className="text-xs text-muted-foreground">Avaliação: 5/5</span>
@@ -351,7 +351,7 @@ export default function HomePage() {
 
             <div className="bg-card border border-border p-6 rounded-xl space-y-4 hover:border-purple-500/50 transition-all">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xl">
                   G
                 </div>
                 <div>
@@ -368,7 +368,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                   ))}
                 </div>
                 <span className="text-xs text-muted-foreground">Avaliação: 5/5</span>

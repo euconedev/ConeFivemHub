@@ -29,7 +29,7 @@
   --destructive: 239 68 68;
   --destructive-foreground: 250 250 255;
 
-  --border: 45 45 50; /* Subtle border #2D2D32 */
+  --border: 168 85 247; /* Subtle border using primary color */
   --input: 38 38 42;
   --ring: 168 85 247;
 

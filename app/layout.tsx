@@ -17,12 +17,13 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: "ConeFiveM Hub - Scripts & Assets para FiveM",
-  description: "Marketplace de scripts e assets digitais para servidores FiveM",
+  title: "Cone Studios - Premium FiveM Assets & Scripts",
+  description:
+    "Loja completa de scripts, MLOs, veículos e assets premium para servidores FiveM. Qualidade garantida e suporte dedicado.",
   icons: {
     icon: "/favicon.ico",
   },
-    generator: 'v0.app'
+  generator: "v0.app",
 }
 
 export default function RootLayout({
@@ -32,7 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${poppins.variable}`}>
-      <body className="font-sans antialiased bg-background text-foreground min-h-screen">
+      <body className="font-sans antialiased min-h-screen">
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
       </body>

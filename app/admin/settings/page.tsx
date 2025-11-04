@@ -15,6 +15,10 @@ import {
   saveDiscordSettings,
   getPaymentSettings,
   savePaymentSettings,
+  getEmailSettings,
+  saveEmailSettings,
+  getSecuritySettings,
+  saveSecuritySettings,
 } from "@/lib/supabase-storage"
 import { getDiscordClientMembers, DiscordGuildMember } from "@/lib/discord-api"
 
@@ -49,11 +53,17 @@ export default function AdminSettingsPage() {
   // Email Settings
   const [emailSender, setEmailSender] = useState("")
   const [emailApiKey, setEmailApiKey] = useState("")
+  const [emailHost, setEmailHost] = useState("")
+  const [emailPort, setEmailPort] = useState("")
+  const [emailUser, setEmailUser] = useState("")
+  const [emailPass, setEmailPass] = useState("")
   const [isSavingEmail, setIsSavingEmail] = useState(false)
 
   // Security Settings
   const [twoFactorAuthEnabled, setTwoFactorAuthEnabled] = useState(false)
   const [sessionTimeout, setSessionTimeout] = useState(30)
+  const [failedLoginAttempts, setFailedLoginAttempts] = useState(5)
+  const [lockoutTime, setLockoutTime] = useState(300)
   const [isSavingSecurity, setIsSavingSecurity] = useState(false)
 
   const loadDiscordClientMembers = async (guildId: string, botToken: string) => {
@@ -102,8 +112,32 @@ export default function AdminSettingsPage() {
       }
     }
 
+    const loadEmailSettings = async () => {
+      const settings = await getEmailSettings()
+      if (settings) {
+        setEmailSender(settings.email_sender)
+        setEmailApiKey(settings.email_api_key)
+        setEmailHost(settings.email_host)
+        setEmailPort(settings.email_port)
+        setEmailUser(settings.email_user)
+        setEmailPass(settings.email_pass)
+      }
+    }
+
+    const loadSecuritySettings = async () => {
+      const settings = await getSecuritySettings()
+      if (settings) {
+        setTwoFactorAuthEnabled(settings.two_factor_auth_enabled)
+        setSessionTimeout(settings.session_timeout)
+        setFailedLoginAttempts(settings.failed_login_attempts)
+        setLockoutTime(settings.lockout_time)
+      }
+    }
+
     loadDiscordSettings()
     loadPaymentSettings()
+    loadEmailSettings()
+    loadSecuritySettings()
   }, [])
 
   const handleSaveStoreSettings = async () => {
@@ -144,22 +178,60 @@ export default function AdminSettingsPage() {
 
   const handleSaveEmailSettings = async () => {
     setIsSavingEmail(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast({
-      title: "Sucesso!",
-      description: "Configurações de e-mail salvas com sucesso.",
-    })
-    setIsSavingEmail(false)
+    try {
+      const savedSettings = await saveEmailSettings({
+        email_sender: emailSender,
+        email_api_key: emailApiKey,
+        email_host: emailHost,
+        email_port: emailPort,
+        email_user: emailUser,
+        email_pass: emailPass,
+      })
+
+      if (savedSettings) {
+        toast({
+          title: "Sucesso!",
+          description: "Configurações de e-mail salvas com sucesso.",
+        })
+      } else throw new Error("Failed to save email settings.")
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações de e-mail.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingEmail(false)
+    }
   }
 
   const handleSaveSecuritySettings = async () => {
     setIsSavingSecurity(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast({
-      title: "Sucesso!",
-      description: "Configurações de segurança salvas com sucesso.",
-    })
-    setIsSavingSecurity(false)
+    try {
+      const savedSettings = await saveSecuritySettings({
+        two_factor_auth_enabled: twoFactorAuthEnabled,
+        session_timeout: sessionTimeout,
+        failed_login_attempts: failedLoginAttempts,
+        lockout_time: lockoutTime,
+      })
+
+      if (savedSettings) {
+        toast({
+          title: "Sucesso!",
+          description: "Configurações de segurança salvas com sucesso.",
+        })
+      } else throw new Error("Failed to save security settings.")
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar configurações de segurança.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingSecurity(false)
+    }
   }
 
   const handleSaveDiscordSettings = async () => {
@@ -354,3 +426,136 @@ export default function AdminSettingsPage() {
     </div>
   )
 }
+
+        {/* Pagamento */}
+        <TabsContent value="payment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Pagamento</CardTitle>
+              <CardDescription>Gerencie suas integrações de pagamento.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="abacatepayToken">Token AbacatePay</Label>
+                <Input
+                  id="abacatepayToken"
+                  type="password"
+                  value={abacatepayToken}
+                  onChange={(e) => setAbacatepayToken(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="webhookUrl">URL do Webhook</Label>
+                <Input id="webhookUrl" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
+              </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button onClick={handleSavePaymentSettings} disabled={isSavingPayment}>
+                {isSavingPayment ? "Salvando..." : "Salvar alterações"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* Email */}
+        <TabsContent value="email" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de E-mail</CardTitle>
+              <CardDescription>Gerencie as configurações de envio de e-mail.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="emailSender">Remetente</Label>
+                <Input id="emailSender" value={emailSender} onChange={(e) => setEmailSender(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailApiKey">API Key</Label>
+                <Input
+                  id="emailApiKey"
+                  type="password"
+                  value={emailApiKey}
+                  onChange={(e) => setEmailApiKey(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailHost">Host SMTP</Label>
+                <Input id="emailHost" value={emailHost} onChange={(e) => setEmailHost(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailPort">Porta SMTP</Label>
+                <Input id="emailPort" value={emailPort} onChange={(e) => setEmailPort(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailUser">Usuário SMTP</Label>
+                <Input id="emailUser" value={emailUser} onChange={(e) => setEmailUser(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailPass">Senha SMTP</Label>
+                <Input
+                  id="emailPass"
+                  type="password"
+                  value={emailPass}
+                  onChange={(e) => setEmailPass(e.target.value)}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button onClick={handleSaveEmailSettings} disabled={isSavingEmail}>
+                {isSavingEmail ? "Salvando..." : "Salvar alterações"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* Segurança */}
+        <TabsContent value="security" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Segurança</CardTitle>
+              <CardDescription>Gerencie as configurações de segurança da sua loja.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="twoFactorAuthEnabled">Autenticação de Dois Fatores</Label>
+                <Switch
+                  id="twoFactorAuthEnabled"
+                  checked={twoFactorAuthEnabled}
+                  onCheckedChange={setTwoFactorAuthEnabled}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sessionTimeout">Tempo Limite da Sessão (minutos)</Label>
+                <Input
+                  id="sessionTimeout"
+                  type="number"
+                  value={sessionTimeout}
+                  onChange={(e) => setSessionTimeout(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="failedLoginAttempts">Tentativas de Login Falhas Permitidas</Label>
+                <Input
+                  id="failedLoginAttempts"
+                  type="number"
+                  value={failedLoginAttempts}
+                  onChange={(e) => setFailedLoginAttempts(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lockoutTime">Tempo de Bloqueio (segundos)</Label>
+                <Input
+                  id="lockoutTime"
+                  type="number"
+                  value={lockoutTime}
+                  onChange={(e) => setLockoutTime(Number(e.target.value))}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button onClick={handleSaveSecuritySettings} disabled={isSavingSecurity}>
+                {isSavingSecurity ? "Salvando..." : "Salvar alterações"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>

@@ -66,6 +66,9 @@ export default function AdminSettingsPage() {
   const [lockoutTime, setLockoutTime] = useState(300)
   const [isSavingSecurity, setIsSavingSecurity] = useState(false)
 
+  // Adicionado estado de carregamento global
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+
   const loadDiscordClientMembers = async (guildId: string, botToken: string) => {
     setIsLoadingDiscordMembers(true)
     try {
@@ -87,58 +90,70 @@ export default function AdminSettingsPage() {
     }
   }
 
+  // Consolidado useEffect para carregar todas as configurações
   useEffect(() => {
-    const loadDiscordSettings = async () => {
-      const settings = await getDiscordSettings()
-      if (settings) {
-        setDiscordClientId(settings.discord_client_id)
-        setDiscordClientSecret(settings.discord_client_secret)
-        setDiscordRedirectUri(settings.discord_redirect_uri)
-        setDiscordBotToken(settings.discord_bot_token)
-        setDiscordGuildId(settings.discord_guild_id)
-        setDiscordWebhookUrl(settings.discord_webhook_url)
+    const loadAllSettings = async () => {
+      try {
+        // Carregar configurações do Discord
+        const discordSettings = await getDiscordSettings()
+        if (discordSettings) {
+          setDiscordClientId(discordSettings.discord_client_id)
+          setDiscordClientSecret(discordSettings.discord_client_secret)
+          setDiscordRedirectUri(discordSettings.discord_redirect_uri)
+          setDiscordBotToken(discordSettings.discord_bot_token)
+          setDiscordGuildId(discordSettings.discord_guild_id)
+          setDiscordWebhookUrl(discordSettings.discord_webhook_url)
 
-        if (settings.discord_guild_id && settings.discord_bot_token) {
-          loadDiscordClientMembers(settings.discord_guild_id, settings.discord_bot_token)
+          if (discordSettings.discord_guild_id && discordSettings.discord_bot_token) {
+            await loadDiscordClientMembers(discordSettings.discord_guild_id, discordSettings.discord_bot_token)
+          }
         }
+
+        // Carregar configurações de pagamento
+        const paymentSettings = await getPaymentSettings()
+        if (paymentSettings) {
+          setAbacatepayToken(paymentSettings.abacatepay_token)
+          setWebhookUrl(paymentSettings.webhook_url)
+        }
+
+        // Carregar configurações de e-mail
+        const emailSettings = await getEmailSettings()
+        if (emailSettings) {
+          setEmailSender(emailSettings.email_sender)
+          setEmailApiKey(emailSettings.email_api_key)
+          setEmailHost(emailSettings.email_host)
+          setEmailPort(emailSettings.email_port)
+          setEmailUser(emailSettings.email_user)
+          setEmailPass(emailSettings.email_pass)
+        }
+
+        // Carregar configurações de segurança
+        const securitySettings = await getSecuritySettings()
+        if (securitySettings) {
+          setTwoFactorAuthEnabled(securitySettings.two_factor_auth_enabled)
+          setSessionTimeout(securitySettings.session_timeout)
+          setFailedLoginAttempts(securitySettings.failed_login_attempts)
+          setLockoutTime(securitySettings.lockout_time)
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error)
+        toast({
+          title: "Erro",
+          description: "Falha ao carregar configurações do sistema.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingSettings(false)
       }
     }
 
-    const loadPaymentSettings = async () => {
-      const settings = await getPaymentSettings()
-      if (settings) {
-        setAbacatepayToken(settings.abacatepay_token)
-        setWebhookUrl(settings.webhook_url)
-      }
-    }
-
-    const loadEmailSettings = async () => {
-      const settings = await getEmailSettings()
-      if (settings) {
-        setEmailSender(settings.email_sender)
-        setEmailApiKey(settings.email_api_key)
-        setEmailHost(settings.email_host)
-        setEmailPort(settings.email_port)
-        setEmailUser(settings.email_user)
-        setEmailPass(settings.email_pass)
-      }
-    }
-
-    const loadSecuritySettings = async () => {
-      const settings = await getSecuritySettings()
-      if (settings) {
-        setTwoFactorAuthEnabled(settings.two_factor_auth_enabled)
-        setSessionTimeout(settings.session_timeout)
-        setFailedLoginAttempts(settings.failed_login_attempts)
-        setLockoutTime(settings.lockout_time)
-      }
-    }
-
-    loadDiscordSettings()
-    loadPaymentSettings()
-    loadEmailSettings()
-    loadSecuritySettings()
+    loadAllSettings()
   }, [])
+
+  // Adicionado fallback de carregamento
+  if (isLoadingSettings) {
+    return <div className="flex items-center justify-center h-screen"><p className="text-xl font-medium">Carregando configurações...</p></div>
+  }
 
   const handleSaveStoreSettings = async () => {
     setIsSavingStore(true)
@@ -435,18 +450,27 @@ export default function AdminSettingsPage() {
               <CardDescription>Gerencie suas integrações de pagamento.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="abacatepayToken">Token AbacatePay</Label>
-                <Input
-                  id="abacatepayToken"
-                  type="password"
-                  value={abacatepayToken}
-                  onChange={(e) => setAbacatepayToken(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="webhookUrl">URL do Webhook</Label>
-                <Input id="webhookUrl" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="abacatepayToken">Token AbacatePay</Label>
+                  <Input
+                    id="abacatepayToken"
+                    type="password"
+                    placeholder="sk_live_xxxxxx"
+                    value={abacatepayToken}
+                    onChange={(e) => setAbacatepayToken(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="webhookUrl">Webhook URL</Label>
+                  <Input
+                    id="webhookUrl"
+                    type="url"
+                    placeholder="https://discord.com/api/webhooks/xxxxxx/xxxxxx"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                  />
+                </div>
               </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">

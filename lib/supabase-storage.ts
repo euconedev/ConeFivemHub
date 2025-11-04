@@ -276,28 +276,45 @@ export async function updateDiscordClientTags(clientId: string, tags: string[]):
 
 export async function getDiscordSettings(): Promise<DiscordSettings | null> {
   const supabase = getSupabaseBrowserClient()
-  const { data, error } = await supabase.from("settings").select("*").eq("id", "discord_settings").single()
+  const { data, error } = await supabase.from("settings").select("*").eq("id", "discord_settings")
 
   if (error) {
     console.error("[v0] Error fetching Discord settings:", error)
     return null
   }
-  return data
+
+  if (!data || data.length === 0) return null
+
+  // Aggregate separate rows into a single DiscordSettings object
+  const aggregatedSettings: Partial<DiscordSettings> = { id: "discord_settings" }
+  data.forEach(setting => {
+    aggregatedSettings[setting.key as keyof DiscordSettings] = JSON.parse(setting.value)
+  })
+
+  return aggregatedSettings as DiscordSettings
 }
 
 export async function saveDiscordSettings(settings: DiscordSettings): Promise<DiscordSettings | null> {
   const supabase = getSupabaseBrowserClient()
-  const { data, error } = await supabase
-    .from("settings")
-    .upsert({ id: "discord_settings", ...settings })
-    .select()
-    .single()
+  const upsertPromises = Object.entries(settings).map(([key, value]) => {
+    if (key === 'id') return Promise.resolve(null); // Skip the 'id' field as it's not part of the actual setting key
+    return supabase
+      .from("settings")
+      .upsert({ id: "discord_settings", type: "discord", key: key, value: JSON.stringify(value) }, { onConflict: 'type,key' })
+      .select()
+      .single()
+  })
 
-  if (error) {
-    console.error("[v0] Error saving Discord settings:", error)
-    return null
+  const results = await Promise.all(upsertPromises);
+  const errors = results.filter(result => result && result.error).map(result => result?.error);
+
+  if (errors.length > 0) {
+    console.error("[v0] Error saving Discord settings:", errors);
+    return null;
   }
-  return data
+
+  // Assuming all upserts were successful, return the original settings object
+  return settings;
 }
 
 export async function getPaymentSettings(): Promise<PaymentSettings | null> {

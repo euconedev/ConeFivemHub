@@ -2,15 +2,17 @@ import Link from "next/link"
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <Link href="/" className={`flex items-center gap-2 ${className}`}>
+    <Link href="/" className={`flex items-center gap-3 ${className}`}>
       <div className="relative">
-        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-xl glow-primary">
+        <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center font-bold text-white text-xl glow-primary">
           C
         </div>
       </div>
       <div className="flex flex-col">
-        <span className="font-bold text-lg leading-none text-foreground">ConeFiveM Hub</span>
-        <span className="text-xs text-muted-foreground leading-none mt-0.5">by Cone Dev</span>
+        <span className="font-bold text-lg leading-none bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent">
+          Cone Studios
+        </span>
+        <span className="text-xs text-muted-foreground leading-none mt-0.5">Premium FiveM Assets</span>
       </div>
     </Link>
   )

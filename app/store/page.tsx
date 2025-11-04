@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer"
 import { ProductCard } from "@/components/product-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, ShoppingCart } from "lucide-react"
 import type { Product } from "@/lib/types"
 import { getProducts as getSupabaseProducts } from "@/lib/supabase-storage"
 import {
@@ -33,8 +33,6 @@ export default function StorePage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [products, setProducts] = useState<Product[]>([])
-  const [showProductModal, setShowProductModal] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -145,11 +143,50 @@ export default function StorePage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
-                  <DialogTrigger asChild key={product.id}>
-                    <div onClick={() => setSelectedProduct(product)}>
-                      <ProductCard product={product} />
-                    </div>
-                  </DialogTrigger>
+                  <Dialog key={product.id}>
+                    <DialogTrigger asChild>
+                      <div>
+                        <ProductCard product={product} />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[600px] bg-background">
+                      <DialogHeader>
+                        <DialogTitle>{product.name}</DialogTitle>
+                        <DialogDescription>{product.description}</DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <img
+                          src={product.image || "/placeholder.svg"}
+                          alt={product.name}
+                          className="object-cover w-full h-48 rounded-md"
+                        />
+                        <p>Preço: R$ {product.price.toFixed(2)}</p>
+                        <p>Categoria: {product.category}</p>
+                        <p>Versão: {product.version}</p>
+                        <p>Downloads: {product.downloads}</p>
+                        <p>Avaliação: {product.rating}</p>
+                        {product.features && product.features.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold">Características:</h4>
+                            <ul className="list-disc pl-5">
+                              {product.features.map((feature, index) => (
+                                <li key={index}>{feature}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <Button>
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Adicionar ao Carrinho
+                        </Button>
+                        <DialogClose asChild>
+                          <Button variant="outline">Fechar</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 ))}
               </div>
             )}
@@ -159,49 +196,6 @@ export default function StorePage() {
 
       <Footer />
 
-      <Dialog open={showProductModal} onOpenChange={setShowProductModal}>
-        <DialogContent className="sm:max-w-[600px] bg-background">
-          {selectedProduct && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{selectedProduct.name}</DialogTitle>
-                <DialogDescription>{selectedProduct.description}</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <img
-                  src={selectedProduct.image || "/placeholder.svg"}
-                  alt={selectedProduct.name}
-                  className="object-cover w-full h-48 rounded-md"
-                />
-                <p>Preço: R$ {selectedProduct.price.toFixed(2)}</p>
-                <p>Categoria: {selectedProduct.category}</p>
-                <p>Versão: {selectedProduct.version}</p>
-                <p>Downloads: {selectedProduct.downloads}</p>
-                <p>Avaliação: {selectedProduct.rating}</p>
-                {selectedProduct.features && selectedProduct.features.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold">Características:</h4>
-                    <ul className="list-disc pl-5">
-                      {selectedProduct.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <DialogFooter>
-                <Button>
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Adicionar ao Carrinho
-                </Button>
-                <DialogClose asChild>
-                  <Button variant="outline">Fechar</Button>
-                </DialogClose>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

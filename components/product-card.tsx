@@ -11,9 +11,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Card className="group overflow-hidden border-primary/50 bg-card hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+    <Card className="group overflow-hidden border-2 border-border bg-card hover:border-primary transition-all duration-300 hover:shadow-xl">
       <Link href={`/store/${product.id}`}>
-        <div className="relative aspect-video overflow-hidden bg-muted">
+        <div className="relative aspect-video overflow-hidden bg-muted border-b-2 border-border">
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}
@@ -21,10 +21,10 @@ export function ProductCard({ product }: ProductCardProps) {
           />
           <div className="absolute top-2 right-2 flex gap-2">
             {product.isNew && (
-              <Badge className="bg-primary text-primary-foreground shadow-lg shadow-primary/50">Novo</Badge>
+              <Badge className="bg-primary text-white font-bold">NOVO</Badge>
             )}
             {product.isFeatured && (
-              <Badge variant="secondary" className="shadow-lg">
+              <Badge variant="secondary" className="border border-border">
                 Destaque
               </Badge>
             )}
@@ -32,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-3 bg-card">
         <div className="space-y-1">
           <Link href={`/store/${product.id}`}>
             <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-1">
@@ -51,17 +51,17 @@ export function ProductCard({ product }: ProductCardProps) {
             <Download className="h-4 w-4" />
             <span>{product.downloads}</span>
           </div>
-          <Badge variant="outline" className="ml-auto">
+          <Badge variant="outline" className="ml-auto border-border">
             v{product.version}
           </Badge>
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+      <CardFooter className="p-4 pt-0 flex items-center justify-between bg-card border-t-2 border-border">
         <div className="flex flex-col">
           <span className="text-2xl font-bold text-primary">R$ {product.price.toFixed(2)}</span>
         </div>
-        <Button size="sm" className="gap-2">
+        <Button size="sm" className="bg-primary hover:bg-primary/90 gap-2">
           <ShoppingCart className="h-4 w-4" />
           Comprar
         </Button>

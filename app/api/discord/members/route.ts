@@ -1,59 +1,50 @@
 // app/api/discord/members/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const guildId = searchParams.get('guildId');
-  const roleName = searchParams.get('role') || 'cliente';  // Role padrão: "cliente"
-  const botToken = searchParams.get('token');
+  const { searchParams } = new URL(request.url)
+  const guildId = searchParams.get('guildId')
+  const roleId = searchParams.get('roleId')  // ← AGORA É ID
+  const botToken = searchParams.get('token')
 
-  // Validação básica
-  if (!guildId || !botToken) {
-    return NextResponse.json({ error: 'Guild ID e token obrigatórios' }, { status: 400 });
+  if (!guildId || !roleId || !botToken) {
+    return NextResponse.json({ error: 'guildId, roleId e token são obrigatórios' }, { status: 400 })
   }
 
   try {
-    // 1. Busca os ROLES do servidor (para encontrar o ID do role "cliente")
-    const rolesRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
-      headers: {
-        'Authorization': `Bot ${botToken}`,
-      },
-    });
+    // === BUSCA MEMBROS COM PAGINAÇÃO ===
+    let allMembers: any[] = []
+    let lastUserId: string | undefined
+    const limit = 1000
 
-    if (!rolesRes.ok) {
-      const errorText = await rolesRes.text();
-      return NextResponse.json({ 
-        error: `Falha ao buscar roles: ${rolesRes.status} - ${errorText}` 
-      }, { status: rolesRes.status });
+    while (true) {
+      let url = `https://discord.com/api/v10/guilds/${guildId}/members?limit=${limit}`
+      if (lastUserId) url += `&after=${lastUserId}`
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bot ${botToken}` },
+      })
+
+      if (!res.ok) {
+        const err = await res.text()
+        return NextResponse.json({ error: `Membros: ${res.status} - ${err}` }, { status: res.status })
+      }
+
+      const members: any[] = await res.json()
+      if (members.length === 0) break
+
+      allMembers = allMembers.concat(members)
+      lastUserId = members[members.length - 1].user.id
+
+      if (members.length < limit) break
     }
 
-    const roles = await rolesRes.json();
-    const targetRole = roles.find((r: any) => r.name.toLowerCase() === roleName.toLowerCase());
+    // === FILTRA POR ROLE ID ===
+    const clientMembers = allMembers.filter(m => m.roles.includes(roleId))
 
-    if (!targetRole) {
-      return NextResponse.json({ error: `Role "${roleName}" não encontrado` }, { status: 404 });
-    }
-
-    // 2. Busca MEMBROS do servidor (limit 1000 para evitar rate limit)
-    const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`, {
-      headers: {
-        'Authorization': `Bot ${botToken}`,
-      },
-    });
-
-    if (!membersRes.ok) {
-      const errorText = await membersRes.text();
-      return NextResponse.json({ 
-        error: `Falha ao buscar membros: ${membersRes.status} - ${errorText}` 
-      }, { status: membersRes.status });
-    }
-
-    const members = await membersRes.json();
-    const clientMembers = members.filter((m: any) => m.roles.includes(targetRole.id));
-
-    return NextResponse.json(clientMembers);
+    return NextResponse.json(clientMembers)
   } catch (error) {
-    console.error('Erro na API Discord:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('Erro na API:', error)
+    return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

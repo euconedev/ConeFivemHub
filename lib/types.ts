@@ -3,7 +3,7 @@ export interface Product {
   name: string
   description: string
   price: number
-  category: "script" | "asset" | "mlo" | "vehicle" | "weapon"
+  category_id: string
   image: string
   features: string[]
   version: string

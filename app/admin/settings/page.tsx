@@ -64,49 +64,33 @@ export default function AdminSettingsPage() {
   const [failedLoginAttempts, setFailedLoginAttempts] = useState(5)
   const [lockoutTime, setLockoutTime] = useState(300)
   const [isSavingSecurity, setIsSavingSecurity] = useState(false)
+const [discordClientRoleId, setDiscordClientRoleId] = useState("")
 
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
 
-  const loadDiscordClientMembers = async (guildId: any, botToken: any) => {
-  // === CONVERTE PARA STRING E VALIDA ===
-  const guildIdStr = String(guildId ?? '').trim()
-  const botTokenStr = String(botToken ?? '').trim()
+ const loadDiscordClientMembers = async () => {
+  const guildId = String(discordGuildId ?? '').trim()
+  const roleId = String(discordClientRoleId ?? '').trim()
+  const botToken = String(discordBotToken ?? '').trim()
 
-  if (!guildIdStr || !botTokenStr) {
-    toast({ 
-      title: "Erro", 
-      description: "Guild ID e Bot Token são obrigatórios.", 
-      variant: "destructive" 
-    })
-    return
-  }
-
-  if (guildIdStr.startsWith('YOUR_') || botTokenStr.startsWith('YOUR_')) {
-    toast({ 
-      title: "Erro", 
-      description: "Configure valores reais no Discord.", 
-      variant: "destructive" 
-    })
+  if (!guildId || !roleId || !botToken) {
+    toast({ title: "Erro", description: "Guild ID, Role ID e Token são obrigatórios.", variant: "destructive" })
     return
   }
 
   setIsLoadingDiscordMembers(true)
   try {
-    const members = await getDiscordClientMembers(guildIdStr, "cliente", botTokenStr)
+    const members = await getDiscordClientMembers(guildId, roleId, botToken)
     setDiscordClientMembers(members)
-    toast({
-      title: "Sucesso!",
-      description: `${members.length} cliente(s) encontrado(s).`,
-    })
+    toast({ title: "Sucesso!", description: `${members.length} clientes encontrados.` })
   } catch (error: any) {
-    console.error("Erro ao carregar membros:", error)
-    const message = error.message.includes('403')
-      ? "Bot sem permissão. Reinvite com 'View Members'."
-      : error.message.includes('Role')
-      ? "Cargo 'cliente' não encontrado."
-      : "Falha ao conectar ao Discord."
-
-    toast({ title: "Erro", description: message, variant: "destructive" })
+    toast({ 
+      title: "Erro", 
+      description: error.message.includes('404') 
+        ? "Bot não está no servidor ou Role ID inválido." 
+        : "Falha ao carregar membros.", 
+      variant: "destructive" 
+    })
   } finally {
     setIsLoadingDiscordMembers(false)
   }
@@ -126,6 +110,7 @@ useEffect(() => {
         setDiscordBotToken(discordSettings.discord_bot_token ?? "")
         setDiscordGuildId(discordSettings.discord_guild_id ?? "")
         setDiscordWebhookUrl(discordSettings.discord_webhook_url ?? "")
+        setDiscordClientRoleId(discordSettings.discord_client_role_id ?? "")
 
 // === CARREGA MEMBROS COM VALIDAÇÃO ===
         const guildId = String(discordSettings.discord_guild_id ?? '').trim()
@@ -248,6 +233,7 @@ useEffect(() => {
         discord_bot_token: discordBotToken,
         discord_guild_id: discordGuildId,
         discord_webhook_url: discordWebhookUrl,
+        discord_client_role_id: discordClientRoleId,
       })
 
       if (saved) {
@@ -446,6 +432,15 @@ useEffect(() => {
                 <Label htmlFor="discordGuildId">Guild ID</Label>
                 <Input id="discordGuildId" value={discordGuildId} onChange={e => setDiscordGuildId(e.target.value)} />
               </div>
+              <div className="space-y-2">
+  <Label htmlFor="discordClientRoleId">ID do Cargo "Cliente"</Label>
+  <Input 
+    id="discordClientRoleId" 
+    value={discordClientRoleId} 
+    onChange={e => setDiscordClientRoleId(e.target.value)} 
+    placeholder="123456789012345678"
+  />
+</div>
               <div className="space-y-2">
                 <Label htmlFor="discordWebhookUrl">Webhook URL</Label>
                 <Input id="discordWebhookUrl" value={discordWebhookUrl} onChange={e => setDiscordWebhookUrl(e.target.value)} />

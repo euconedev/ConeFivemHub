@@ -70,7 +70,7 @@ const [discordClientRoleId, setDiscordClientRoleId] = useState("")
 
  const loadDiscordClientMembers = async () => {
   const guildId = String(discordGuildId ?? '').trim()
-  const roleId = String(discordClientRoleId ?? '').trim()
+const roleId = String(discordClientRoleId).trim()
   const botToken = String(discordBotToken ?? '').trim()
 
   if (!guildId || !roleId || !botToken) {

@@ -31,7 +31,6 @@ export default function AdminSettingsPage() {
   const [storeDescription, setStoreDescription] = useState(
     "Marketplace de scripts e assets digitais para servidores FiveM"
   )
-  const [storeEmail, setStoreEmail] = useState("contato@conefivem.com")
   const [isSavingStore, setIsSavingStore] = useState(false)
 
   // Payment Settings
@@ -68,23 +67,47 @@ export default function AdminSettingsPage() {
 
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
 
+  // === FUNÇÃO SEGURA PARA CARREGAR MEMBROS ===
   const loadDiscordClientMembers = async (guildId: string, botToken: string) => {
+    // Validação básica
+    if (!guildId || !botToken || guildId.trim() === '' || botToken.trim() === '') {
+      toast({ title: "Erro", description: "Guild ID e Bot Token são obrigatórios.", variant: "destructive" })
+      return
+    }
+
+    if (guildId.startsWith('YOUR_') || botToken.startsWith('YOUR_')) {
+      toast({ title: "Erro", description: "Configure valores reais no Discord.", variant: "destructive" })
+      return
+    }
+
     setIsLoadingDiscordMembers(true)
     try {
       const members = await getDiscordClientMembers(guildId, "cliente", botToken)
       setDiscordClientMembers(members)
-      toast({ title: "Sucesso!", description: "Membros clientes do Discord atualizados." })
-    } catch (error) {
-      console.error("Error loading Discord client members:", error)
-      toast({ title: "Erro", description: "Falha ao carregar membros.", variant: "destructive" })
+      toast({
+        title: "Sucesso!",
+        description: `${members.length} cliente(s) encontrado(s) no Discord.`,
+      })
+    } catch (error: any) {
+      console.error("Erro ao carregar membros do Discord:", error)
+      const message = error.message.includes('403')
+        ? "Bot sem permissão. Verifique o token e convide com permissões."
+        : error.message.includes('Role')
+        ? "Cargo 'cliente' não encontrado no servidor."
+        : "Falha ao conectar ao Discord."
+
+      toast({ title: "Erro", description: message, variant: "destructive" })
     } finally {
       setIsLoadingDiscordMembers(false)
     }
   }
 
+  // === CARREGA TODAS AS CONFIGURAÇÕES ===
   useEffect(() => {
     const loadAllSettings = async () => {
       try {
+        setIsLoadingSettings(true)
+
         // === DISCORD ===
         const discordSettings = await getDiscordSettings()
         if (discordSettings) {
@@ -95,12 +118,13 @@ export default function AdminSettingsPage() {
           setDiscordGuildId(discordSettings.discord_guild_id ?? "")
           setDiscordWebhookUrl(discordSettings.discord_webhook_url ?? "")
 
+          // Só carrega membros se tiver dados válidos
           if (discordSettings.discord_guild_id && discordSettings.discord_bot_token) {
             await loadDiscordClientMembers(discordSettings.discord_guild_id, discordSettings.discord_bot_token)
           }
         }
 
-        // === PAYMENT ===
+        // === PAGAMENTO ===
         const paymentSettings = await getPaymentSettings()
         if (paymentSettings) {
           setAbacatepayToken(paymentSettings.abacatepay_token ?? "")
@@ -113,12 +137,12 @@ export default function AdminSettingsPage() {
           setEmailSender(emailSettings.email_sender ?? "")
           setEmailApiKey(emailSettings.email_api_key ?? "")
           setEmailHost(emailSettings.email_host ?? "")
-          setEmailPort(String(emailSettings.email_port ?? 587))  // ← GARANTE STRING
+          setEmailPort(String(emailSettings.email_port ?? 587))
           setEmailUser(emailSettings.email_user ?? "")
           setEmailPass(emailSettings.email_pass ?? "")
         }
 
-        // === SECURITY ===
+        // === SEGURANÇA ===
         const securitySettings = await getSecuritySettings()
         if (securitySettings) {
           setTwoFactorAuthEnabled(!!securitySettings.two_factor_auth_enabled)
@@ -127,7 +151,7 @@ export default function AdminSettingsPage() {
           setLockoutTime(Number(securitySettings.lockout_time) || 300)
         }
       } catch (error) {
-        console.error("Error loading settings:", error)
+        console.error("Erro ao carregar configurações:", error)
         toast({ title: "Erro", description: "Falha ao carregar configurações.", variant: "destructive" })
       } finally {
         setIsLoadingSettings(false)
@@ -137,21 +161,15 @@ export default function AdminSettingsPage() {
     loadAllSettings()
   }, [toast])
 
-  if (isLoadingSettings) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-xl font-medium">Carregando configurações...</p>
-      </div>
-    )
-  }
-
+  // === SALVAR LOJA (simulado) ===
   const handleSaveStoreSettings = async () => {
     setIsSavingStore(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 800))
     toast({ title: "Sucesso!", description: "Configurações da loja salvas." })
     setIsSavingStore(false)
   }
 
+  // === SALVAR PAGAMENTO ===
   const handleSavePaymentSettings = async () => {
     setIsSavingPayment(true)
     try {
@@ -168,6 +186,7 @@ export default function AdminSettingsPage() {
     }
   }
 
+  // === SALVAR EMAIL ===
   const handleSaveEmailSettings = async () => {
     setIsSavingEmail(true)
     try {
@@ -188,6 +207,7 @@ export default function AdminSettingsPage() {
     }
   }
 
+  // === SALVAR SEGURANÇA ===
   const handleSaveSecuritySettings = async () => {
     setIsSavingSecurity(true)
     try {
@@ -206,6 +226,7 @@ export default function AdminSettingsPage() {
     }
   }
 
+  // === SALVAR DISCORD + RECARREGAR MEMBROS ===
   const handleSaveDiscordSettings = async () => {
     setIsSavingDiscord(true)
     try {
@@ -217,13 +238,29 @@ export default function AdminSettingsPage() {
         discord_guild_id: discordGuildId,
         discord_webhook_url: discordWebhookUrl,
       })
-      if (saved) toast({ title: "Sucesso!", description: "Discord salvo." })
-      else throw new Error()
+
+      if (saved) {
+        toast({ title: "Sucesso!", description: "Configurações do Discord salvas." })
+        // Recarrega membros automaticamente
+        if (discordGuildId && discordBotToken) {
+          await loadDiscordClientMembers(discordGuildId, discordBotToken)
+        }
+      } else {
+        throw new Error()
+      }
     } catch (error) {
       toast({ title: "Erro", description: "Falha ao salvar Discord.", variant: "destructive" })
     } finally {
       setIsSavingDiscord(false)
     }
+  }
+
+  if (isLoadingSettings) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-xl font-medium">Carregando configurações...</p>
+      </div>
+    )
   }
 
   return (
@@ -238,8 +275,8 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="payment"><CreditCard className="mr-2 h-4 w-4" /> Pagamento</TabsTrigger>
           <TabsTrigger value="email"><Mail className="mr-2 h-4 w-4" /> E-mail</TabsTrigger>
           <TabsTrigger value="security"><Shield className="mr-2 h-4 w-4" /> Segurança</TabsTrigger>
-          <TabsTrigger value="discord"><img src="/discord-icon.svg" alt="" className="mr-2 h-4 w-4" /> Discord</TabsTrigger>
-          <TabsTrigger value="discord-clients"><img src="/discord-icon.svg" alt="" className="mr-2 h-4 w-4" /> Clientes</TabsTrigger>
+          <TabsTrigger value="discord"><img src="/discord-icon.svg" alt="Discord" className="mr-2 h-4 w-4" /> Discord</TabsTrigger>
+          <TabsTrigger value="discord-clients"><img src="/discord-icon.svg" alt="Clientes" className="mr-2 h-4 w-4" /> Clientes</TabsTrigger>
         </TabsList>
 
         {/* === LOJA === */}
@@ -424,25 +461,37 @@ export default function AdminSettingsPage() {
                   onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
                   disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
                 >
-                  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar"}
+                  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
                 </Button>
               </div>
+
               {isLoadingDiscordMembers ? (
-                <p>Carregando...</p>
+                <div className="flex justify-center py-8">
+                  <p className="text-muted-foreground">Carregando membros...</p>
+                </div>
               ) : discordClientMembers.length === 0 ? (
-                <p>Nenhum cliente encontrado.</p>
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhum cliente encontrado. Verifique o cargo "cliente" no servidor.
+                </p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-3 max-h-96 overflow-y-auto">
                   {discordClientMembers.map(member => (
-                    <li key={member.user.id} className="flex items-center gap-2">
-                      {member.user.avatar && (
+                    <li key={member.user.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                      {member.user.avatar ? (
                         <img
-                          src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`}
+                          src={`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=64`}
                           alt={member.user.username}
-                          className="w-8 h-8 rounded-full"
+                          className="w-10 h-10 rounded-full"
                         />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs">
+                          {member.user.username[0].toUpperCase()}
+                        </div>
                       )}
-                      <span>{member.nick || member.user.username}</span>
+                      <div>
+                        <p className="font-medium">{member.nick || member.user.username}</p>
+                        <p className="text-xs text-muted-foreground">#{member.user.discriminator}</p>
+                      </div>
                     </li>
                   ))}
                 </ul>

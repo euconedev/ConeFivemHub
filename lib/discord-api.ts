@@ -40,12 +40,12 @@ export interface DiscordGuildMember {
 // === FUNÇÃO ÚNICA: CHAMA A API INTERNA ===
 export async function getDiscordClientMembers(
   guildId: string,
-  clientRoleName: string = 'cliente',
+clientRoleId: string,  // ← AGORA É O ID
   botToken: string
 ): Promise<DiscordGuildMember[]> {
   const params = new URLSearchParams({
     guildId,
-    role: clientRoleName,
+roleId: clientRoleId,  // ← MUDOU
     token: botToken,
   });
 

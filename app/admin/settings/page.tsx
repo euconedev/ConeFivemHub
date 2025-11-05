@@ -67,62 +67,73 @@ export default function AdminSettingsPage() {
 
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
 
-  // === FUNÇÃO SEGURA PARA CARREGAR MEMBROS ===
-  const loadDiscordClientMembers = async (guildId: string, botToken: string) => {
-    // Validação básica
-    if (!guildId || !botToken || guildId.trim() === '' || botToken.trim() === '') {
-      toast({ title: "Erro", description: "Guild ID e Bot Token são obrigatórios.", variant: "destructive" })
-      return
-    }
+  const loadDiscordClientMembers = async (guildId: any, botToken: any) => {
+  // === CONVERTE PARA STRING E VALIDA ===
+  const guildIdStr = String(guildId ?? '').trim()
+  const botTokenStr = String(botToken ?? '').trim()
 
-    if (guildId.startsWith('YOUR_') || botToken.startsWith('YOUR_')) {
-      toast({ title: "Erro", description: "Configure valores reais no Discord.", variant: "destructive" })
-      return
-    }
-
-    setIsLoadingDiscordMembers(true)
-    try {
-      const members = await getDiscordClientMembers(guildId, "cliente", botToken)
-      setDiscordClientMembers(members)
-      toast({
-        title: "Sucesso!",
-        description: `${members.length} cliente(s) encontrado(s) no Discord.`,
-      })
-    } catch (error: any) {
-      console.error("Erro ao carregar membros do Discord:", error)
-      const message = error.message.includes('403')
-        ? "Bot sem permissão. Verifique o token e convide com permissões."
-        : error.message.includes('Role')
-        ? "Cargo 'cliente' não encontrado no servidor."
-        : "Falha ao conectar ao Discord."
-
-      toast({ title: "Erro", description: message, variant: "destructive" })
-    } finally {
-      setIsLoadingDiscordMembers(false)
-    }
+  if (!guildIdStr || !botTokenStr) {
+    toast({ 
+      title: "Erro", 
+      description: "Guild ID e Bot Token são obrigatórios.", 
+      variant: "destructive" 
+    })
+    return
   }
 
+  if (guildIdStr.startsWith('YOUR_') || botTokenStr.startsWith('YOUR_')) {
+    toast({ 
+      title: "Erro", 
+      description: "Configure valores reais no Discord.", 
+      variant: "destructive" 
+    })
+    return
+  }
+
+  setIsLoadingDiscordMembers(true)
+  try {
+    const members = await getDiscordClientMembers(guildIdStr, "cliente", botTokenStr)
+    setDiscordClientMembers(members)
+    toast({
+      title: "Sucesso!",
+      description: `${members.length} cliente(s) encontrado(s).`,
+    })
+  } catch (error: any) {
+    console.error("Erro ao carregar membros:", error)
+    const message = error.message.includes('403')
+      ? "Bot sem permissão. Reinvite com 'View Members'."
+      : error.message.includes('Role')
+      ? "Cargo 'cliente' não encontrado."
+      : "Falha ao conectar ao Discord."
+
+    toast({ title: "Erro", description: message, variant: "destructive" })
+  } finally {
+    setIsLoadingDiscordMembers(false)
+  }
+}
+
   // === CARREGA TODAS AS CONFIGURAÇÕES ===
-  useEffect(() => {
-    const loadAllSettings = async () => {
-      try {
-        setIsLoadingSettings(true)
+useEffect(() => {
+  const loadAllSettings = async () => {
+    try {
+      setIsLoadingSettings(true)
 
-        // === DISCORD ===
-        const discordSettings = await getDiscordSettings()
-        if (discordSettings) {
-          setDiscordClientId(discordSettings.discord_client_id ?? "")
-          setDiscordClientSecret(discordSettings.discord_client_secret ?? "")
-          setDiscordRedirectUri(discordSettings.discord_redirect_uri ?? "")
-          setDiscordBotToken(discordSettings.discord_bot_token ?? "")
-          setDiscordGuildId(discordSettings.discord_guild_id ?? "")
-          setDiscordWebhookUrl(discordSettings.discord_webhook_url ?? "")
+      const discordSettings = await getDiscordSettings()
+      if (discordSettings) {
+        setDiscordClientId(discordSettings.discord_client_id ?? "")
+        setDiscordClientSecret(discordSettings.discord_client_secret ?? "")
+        setDiscordRedirectUri(discordSettings.discord_redirect_uri ?? "")
+        setDiscordBotToken(discordSettings.discord_bot_token ?? "")
+        setDiscordGuildId(discordSettings.discord_guild_id ?? "")
+        setDiscordWebhookUrl(discordSettings.discord_webhook_url ?? "")
 
-          // Só carrega membros se tiver dados válidos
-          if (discordSettings.discord_guild_id && discordSettings.discord_bot_token) {
-            await loadDiscordClientMembers(discordSettings.discord_guild_id, discordSettings.discord_bot_token)
-          }
+// === CARREGA MEMBROS COM VALIDAÇÃO ===
+        const guildId = String(discordSettings.discord_guild_id ?? '').trim()
+        const botToken = String(discordSettings.discord_bot_token ?? '').trim()
+        if (guildId && botToken && !guildId.startsWith('YOUR_') && !botToken.startsWith('YOUR_')) {
+          await loadDiscordClientMembers(guildId, botToken)
         }
+      }
 
         // === PAGAMENTO ===
         const paymentSettings = await getPaymentSettings()
@@ -151,15 +162,15 @@ export default function AdminSettingsPage() {
           setLockoutTime(Number(securitySettings.lockout_time) || 300)
         }
       } catch (error) {
-        console.error("Erro ao carregar configurações:", error)
-        toast({ title: "Erro", description: "Falha ao carregar configurações.", variant: "destructive" })
-      } finally {
-        setIsLoadingSettings(false)
-      }
+      console.error("Erro ao carregar configurações:", error)
+      toast({ title: "Erro", description: "Falha ao carregar configurações.", variant: "destructive" })
+    } finally {
+      setIsLoadingSettings(false)
     }
+  }
 
-    loadAllSettings()
-  }, [toast])
+  loadAllSettings()
+}, [toast])
 
   // === SALVAR LOJA (simulado) ===
   const handleSaveStoreSettings = async () => {
@@ -457,12 +468,12 @@ export default function AdminSettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex justify-end mb-4">
-                <Button
-                  onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
-                  disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
-                >
-                  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
-                </Button>
+             <Button
+  onClick={() => loadDiscordClientMembers(discordGuildId, discordBotToken)}
+  disabled={isLoadingDiscordMembers || !discordGuildId || !discordBotToken}
+>
+  {isLoadingDiscordMembers ? "Atualizando..." : "Atualizar Membros"}
+</Button>
               </div>
 
               {isLoadingDiscordMembers ? (
